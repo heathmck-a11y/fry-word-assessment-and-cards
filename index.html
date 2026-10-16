@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fry Word Check</title>
+<title>High-Frequency Word Check</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 40%27%3E%3Crect width=%2764%27 height=%2740%27 rx=%274%27 fill=%27%23fff%27 stroke=%27%231f6f78%27 stroke-width=%273%27/%3E%3Cline x1=%270%27 y1=%2710%27 x2=%2764%27 y2=%2710%27 stroke=%27%23e07a7a%27 stroke-width=%273%27/%3E%3C/svg%3E">
-<meta name="description" content="Quick check of the first 300 Fry words in sets of 25, with printable practice cards.">
+<meta name="description" content="Quick check of the first 300 high-frequency words (Kearns list) in sets of 25, with printable practice cards.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
@@ -144,8 +144,8 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
 <body>
 <div class="wrap">
   <header>
-    <h1>Fry Word Check</h1>
-    <p class="sub">First 300 Fry words · saved on this device</p>
+    <h1>High-Frequency Word Check</h1>
+    <p class="sub">First 300 high-frequency words (Kearns list) · saved on this device</p>
   </header>
 
   <div class="banner" id="backupBanner" hidden>
@@ -260,14 +260,14 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
 </div>
 
 <script>
-const FRY = "the of and a to in is you that it he was for on are as with his they I at be this have from or one had by words but not what all were we when your can said there use an each which she do how their if will up other about out many then them these so some her would make like him into time has look two more write go see number no way could people my than first water been called who oil sit now find long down day did get come made may part over new sound take only little work know place years live me back give most very after things our just name good sentence man think say great where help through much before line right too means old any same tell boy following came want show also around form three small set put end does another well large must big even such because turned here why asked went men read need land different home us move try kind hand picture again change off play spell air away animals house point page letters mother answer found study still learn should America world high every near add food between own below country plants last school father keep trees never started city earth eyes light thought head under story saw left don't few while along might close something seemed next hard open example beginning life always those both paper together got group often run important until children side feet car miles night walked white sea began grow took river four carry state once book hear stop without second later miss idea enough eat face watch far Indians really almost let above girl sometimes mountains cut young talk soon list song being leave family it's".split(" ");
+const FRY = "the to and of a in is I you it for that on was with are this be not as at he have from or they all but by your one can we his if will what about my do there an up had out when so no would more she were her like me some their other time has get them then people how see who just new into now been which only could know any these over than back him first very us go our good may make here two many also way did where use down home well after day think help find most work its made too little want right because much even each should through before long take look must off am around why come old last still need same man such got big next something another name water say world never great again those place read put school house part under while found own every away small year tell life three best really set high might went both thought came without few better always let book give end between left show thing sure top hard keep money free once white live room information yes page since group please number city men children head black until night large call play enough run today ever line food hand open try air family car real side far against lot course person took change anything light state saw red told feel however important system someone mother during full along game job together nothing seen list kind body care though special box order soon word buy sun done second yet country often start young story oh business above heard able almost land sound face four front point mean ask else stop learn street ago write problem bad everything maybe".split(" "); // Kearns high-frequency word list, words 1–300 (Texas Education Agency, 2021)
 const RANGES = Array.from({ length: 12 }, (_, k) => ({ id: "s" + (k + 1), from: k * 25 + 1, to: k * 25 + 25, label: `${k * 25 + 1}–${k * 25 + 25}` }));
 const HUNDREDS = ["First 100", "Second 100", "Third 100"];
 const LEGACY = { "1": "s1", "2": "s2", "3": "s3", "4": "s4" };
 const CFG = window.FRY_CONFIG || {};
 const CLIENT_ID = (CFG.googleClientId || "").trim();
-const FOLDER = "Fry Word Assessments";
-const BACKUP_NAME = "fry-checks-backup.json";
+const FOLDER = "High-Frequency Word Assessments";
+const BACKUP_NAME = "word-check-backup.json";
 const K_CHECKS = "fryChecks.v1", K_DRAFT = "fryCheckDraft.v1", K_META = "fryMeta.v1";
 
 const $ = id => document.getElementById(id);
@@ -335,7 +335,7 @@ function setLabel(c) { return c.range === "retest" || c.range === "all" ? null :
 function doneSetsFor(name) { const n = name.toLowerCase(); return new Set(getChecks().filter(c => c.student.toLowerCase() === n && setLabel(c)).map(setLabel)); }
 function wordsLabel(c) {
   if (c.range === "retest") return `Retest of ${c.retestOf.date} not-yet words`;
-  return "Fry " + rangeOf(c.range).label;
+  return "HFW " + rangeOf(c.range).label;
 }
 function counts(c) {
   c = c || state;
@@ -548,7 +548,7 @@ async function buildCardsPdf() {
   return doc;
 }
 
-function cardsFilename() { return `Fry practice cards - ${state.student} - ${state.date}.pdf`.replace(/[\\/:*?"<>|]/g, ""); }
+function cardsFilename() { return `Practice cards - ${state.student} - ${state.date}.pdf`.replace(/[\\/:*?"<>|]/g, ""); }
 function saveBlob(blob, name) {
   const url = URL.createObjectURL(blob); const a = document.createElement("a");
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -596,7 +596,7 @@ function mergeChecks(incoming) {
 // ---------- backup: file ----------
 $("fileBackupBtn").onclick = () => {
   const data = { app: "fry-word-check", version: 1, exportedAt: new Date().toISOString(), checks: getChecks() };
-  saveBlob(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), `fry-checks-backup-${today()}.json`);
+  saveBlob(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), `word-check-backup-${today()}.json`);
   markAllBackedUp();
   backupStatus("ok", "Backup file downloaded. Keep it somewhere safe, like your email or Google Drive. Use Load backup file to bring the checks back.");
 };
@@ -609,7 +609,7 @@ $("fileInput").onchange = async () => {
     if (!data || !Array.isArray(data.checks)) throw new Error("bad");
     const { added, updated } = mergeChecks(data.checks);
     backupStatus("ok", `Loaded the backup file: ${added} check${added === 1 ? "" : "s"} added, ${updated} updated.`);
-  } catch (e) { backupStatus("err", "That file isn't a Fry Word Check backup. Choose the file named like fry-checks-backup-2026-10-16.json."); }
+  } catch (e) { backupStatus("err", "That file isn't a word check backup. Choose the file named like word-check-backup-2026-10-16.json."); }
 };
 
 // ---------- backup: Google Drive ----------
@@ -620,7 +620,7 @@ function initGoogle() {
     $("driveNote").textContent = "Google Drive backup isn't turned on for this copy of the app yet. Use Download backup file instead.";
     return;
   }
-  $("driveNote").textContent = "Saves each check as a Google Sheet in a “Fry Word Assessments” folder in your own Drive. The app can only see files it made.";
+  $("driveNote").textContent = "Saves each check as a Google Sheet in a “High-Frequency Word Assessments” folder in your own Drive. The app can only see files it made.";
   const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true;
   s.onload = () => {
     tokenClient = google.accounts.oauth2.initTokenClient({
@@ -665,7 +665,7 @@ async function upload(meta, content, type, fileId) {
   return (await gfetch(path, { method: fileId ? "PATCH" : "POST", headers: { "Content-Type": `multipart/related; boundary=${b}` }, body })).json();
 }
 function sheetTitle(c) {
-  return c.range === "retest" ? `Fry retest - ${c.student} - ${c.date}` : `Fry ${rangeOf(c.range).label.replace("–", "-")} - ${c.student} - ${c.date}`;
+  return c.range === "retest" ? `HFW retest - ${c.student} - ${c.date}` : `HFW ${rangeOf(c.range).label.replace("–", "-")} - ${c.student} - ${c.date}`;
 }
 $("driveBackupBtn").onclick = () => {
   const btn = $("driveBackupBtn");
@@ -693,7 +693,7 @@ $("driveBackupBtn").onclick = () => {
     const now = Date.now();
     setChecks(list.map(c => ({ ...c, backedUpAt: c.backedUpAt && c.backedUpAt >= c.updatedAt ? c.backedUpAt : now })));
     m.driveBackupId = bf.id; m.lastBackup = now; setMeta(m); renderSaved();
-    backupStatus("ok", `Backed up. ${n} check${n === 1 ? "" : "s"} saved as Google Sheets.` + (folder.webViewLink ? ` <a href="${esc(folder.webViewLink)}" target="_blank" rel="noopener">Open the Fry Word Assessments folder</a>` : ""));
+    backupStatus("ok", `Backed up. ${n} check${n === 1 ? "" : "s"} saved as Google Sheets.` + (folder.webViewLink ? ` <a href="${esc(folder.webViewLink)}" target="_blank" rel="noopener">Open the High-Frequency Word Assessments folder</a>` : ""));
   }).catch(e => backupStatus("err", esc(e.message || "Backing up didn't work. Try again."))).finally(() => { btn.disabled = false; btn.textContent = "Back up to my Google Drive"; });
 };
 $("driveRestoreBtn").onclick = () => {

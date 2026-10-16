@@ -1,6 +1,6 @@
-# Fry Word Check
+# High-Frequency Word Check
 
-A quick check of the first 300 Fry words for K–2 students, in sets of 25, with printable practice cards.
+A quick check of the first 300 high-frequency words for K–2 students (Kearns list), in sets of 25, with printable practice cards.
 
 **Use it here:** https://heathmck-a11y.github.io/fry-word-assessment-and-cards/
 
@@ -19,7 +19,7 @@ A quick check of the first 300 Fry words for K–2 students, in sets of 25, with
 
 - **Every finished check saves in the browser on that device.** No sign-in or setup is needed.
 - Browser data can be lost if browsing data is cleared, if the teacher switches devices, or on school Chromebooks that clear data at sign-out. The app shows a reminder when checks haven't been backed up.
-- **Back up to my Google Drive** saves each check as a Google Sheet in a "Fry Word Assessments" folder in the teacher's own Drive, plus one restore file. **Restore from my Google Drive** brings the checks back on a new device. The app can only see files it created, not the rest of the teacher's Drive.
+- **Back up to my Google Drive** saves each check as a Google Sheet in a "High-Frequency Word Assessments" folder in the teacher's own Drive, plus one restore file. **Restore from my Google Drive** brings the checks back on a new device. The app can only see files it created, not the rest of the teacher's Drive.
 - **Download backup file** saves everything as one file without Google. **Load backup file** brings it back.
 
 No data is ever sent anywhere else. Student results stay in the teacher's browser and, if they choose, their own Google Drive.
@@ -54,7 +54,9 @@ If teachers use school Google accounts, the district's Google Workspace admin ma
 
 ## Word list
 
-Words 1–300 follow Fry's Instant Words in the classic order and word forms (for example "following, turned, asked"). Some newer printings use base forms instead ("follow, turn, ask"). To change a word, edit the `FRY` list near the top of the script in `index.html`.
+Words 1–300 are the first 300 words of the High-Frequency Word List from the Texas Education Agency (word analysis by Devin Kearns, 2021), in frequency order: https://spedsupport.tea.texas.gov/sites/default/files/2023-08/high-frequency-word-list.pdf
+
+To change a word, edit the `FRY` list near the top of the script in `index.html`. (The name is left over from an earlier version that used Fry's list.)
 
 ## Files
 
