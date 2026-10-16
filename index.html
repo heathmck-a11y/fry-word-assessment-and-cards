@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fry Word Check</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 40%27%3E%3Crect width=%2764%27 height=%2740%27 rx=%274%27 fill=%27%23fff%27 stroke=%27%231f6f78%27 stroke-width=%273%27/%3E%3Cline x1=%270%27 y1=%2710%27 x2=%2764%27 y2=%2710%27 stroke=%27%23e07a7a%27 stroke-width=%273%27/%3E%3C/svg%3E">
-<meta name="description" content="Quick check of the first 100 Fry words with printable practice cards.">
+<meta name="description" content="Quick check of the first 300 Fry words in sets of 25, with printable practice cards.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
@@ -108,7 +108,18 @@ input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); ou
 .status.err { border-color: var(--no); }
 .status a { color: var(--accent); font-weight: 700; }
 .cards-box { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--line); }
+.set-group { display: flex; flex-direction: column; gap: 6px; }
+.set-label { font-size: 13px; color: var(--muted); }
+.chip.done { border-color: var(--yes); }
+.chip.done[aria-pressed="true"] { border-color: var(--accent); }
+.prog { display: flex; flex-wrap: wrap; gap: 4px; }
+.pill { font-size: 12px; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill.on { background: var(--yes-soft); border-color: var(--yes); color: var(--ink); }
+.stu { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.stu b { overflow-wrap: anywhere; }
 .saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.stu .saved-list li:last-child { border-bottom: none; }
+.saved-list > li.stu { display: flex; flex-direction: column; align-items: stretch; }
 .saved-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
 .saved-list li a { color: var(--accent); min-width: 0; overflow-wrap: anywhere; }
 .btn.small { padding: 6px 14px; font-size: 14px; flex: 0 0 auto; }
@@ -134,7 +145,7 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
 <div class="wrap">
   <header>
     <h1>Fry Word Check</h1>
-    <p class="sub">First 100 Fry words · saved on this device</p>
+    <p class="sub">First 300 Fry words · saved on this device</p>
   </header>
 
   <div class="banner" id="backupBanner" hidden>
@@ -157,7 +168,8 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
       <span class="legend">Words to check</span>
-      <div class="chips" id="ranges"></div>
+      <div id="ranges" style="display:flex;flex-direction:column;gap:12px"></div>
+      <p class="sub" id="nameHint" hidden></p>
     </div>
     <div class="tools">
       <span class="hint" id="resumeNote" hidden></span>
@@ -210,7 +222,10 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
       <button class="btn primary" id="cardsBtn">Download cards (PDF)</button>
     </div>
     <div class="status" id="cardsStatus" hidden></div>
-    <button class="btn primary" id="nextBtn">Next student</button>
+    <div class="row" style="gap:10px">
+      <button class="btn primary" id="nextSetBtn" hidden></button>
+      <button class="btn primary" id="nextBtn">Next student</button>
+    </div>
   </section>
 
   <!-- SAVED -->
@@ -245,14 +260,10 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
 </div>
 
 <script>
-const FRY = "the of and a to in is you that it he was for on are as with his they I at be this have from or one had by words but not what all were we when your can said there use an each which she do how their if will up other about out many then them these so some her would make like him into time has look two more write go see number no way could people my than first water been called who oil sit now find long down day did get come made may part".split(" ");
-const RANGES = [
-  { id: "all", label: "All 100", from: 1, to: 100 },
-  { id: "1", label: "1–25", from: 1, to: 25 },
-  { id: "2", label: "26–50", from: 26, to: 50 },
-  { id: "3", label: "51–75", from: 51, to: 75 },
-  { id: "4", label: "76–100", from: 76, to: 100 },
-];
+const FRY = "the of and a to in is you that it he was for on are as with his they I at be this have from or one had by words but not what all were we when your can said there use an each which she do how their if will up other about out many then them these so some her would make like him into time has look two more write go see number no way could people my than first water been called who oil sit now find long down day did get come made may part over new sound take only little work know place years live me back give most very after things our just name good sentence man think say great where help through much before line right too means old any same tell boy following came want show also around form three small set put end does another well large must big even such because turned here why asked went men read need land different home us move try kind hand picture again change off play spell air away animals house point page letters mother answer found study still learn should America world high every near add food between own below country plants last school father keep trees never started city earth eyes light thought head under story saw left don't few while along might close something seemed next hard open example beginning life always those both paper together got group often run important until children side feet car miles night walked white sea began grow took river four carry state once book hear stop without second later miss idea enough eat face watch far Indians really almost let above girl sometimes mountains cut young talk soon list song being leave family it's".split(" ");
+const RANGES = Array.from({ length: 12 }, (_, k) => ({ id: "s" + (k + 1), from: k * 25 + 1, to: k * 25 + 25, label: `${k * 25 + 1}–${k * 25 + 25}` }));
+const HUNDREDS = ["First 100", "Second 100", "Third 100"];
+const LEGACY = { "1": "s1", "2": "s2", "3": "s3", "4": "s4" };
 const CFG = window.FRY_CONFIG || {};
 const CLIENT_ID = (CFG.googleClientId || "").trim();
 const FOLDER = "Fry Word Assessments";
@@ -261,7 +272,7 @@ const K_CHECKS = "fryChecks.v1", K_DRAFT = "fryCheckDraft.v1", K_META = "fryMeta
 
 const $ = id => document.getElementById(id);
 let state = null;      // the check being given or viewed
-let rangeId = "all";
+let rangeId = "s1";
 
 // ---------- storage ----------
 let storageOk = true;
@@ -287,10 +298,44 @@ function today() {
   const d = new Date(); const p = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
-function rangeOf(id) { return RANGES.find(r => r.id === id) || RANGES[0]; }
+function rangeOf(id) {
+  if (id === "all") return { id: "all", label: "1–100", from: 1, to: 100 };
+  return RANGES.find(r => r.id === (LEGACY[id] || id)) || RANGES[0];
+}
+function nextSetAfter(id) { if (!id || id === "retest" || id === "all") return null; const r = rangeOf(id); return RANGES.find(x => x.from === r.to + 1) || null; }
+function buildChips(done) {
+  done = done || new Set();
+  $("ranges").replaceChildren(...HUNDREDS.map((h, g) => {
+    const grp = document.createElement("div"); grp.className = "set-group";
+    const lab = document.createElement("span"); lab.className = "set-label"; lab.textContent = h;
+    const row = document.createElement("div"); row.className = "chips";
+    for (const r of RANGES.slice(g * 4, g * 4 + 4)) {
+      const b = document.createElement("button"); b.className = "chip" + (done.has(r.label) ? " done" : "");
+      b.dataset.id = r.id; b.textContent = r.label + (done.has(r.label) ? " ✓" : "");
+      b.setAttribute("aria-pressed", r.id === rangeId);
+      b.onclick = () => selectRange(r.id);
+      row.appendChild(b);
+    }
+    grp.append(lab, row); return grp;
+  }));
+}
+function selectRange(id) { rangeId = id; for (const c of $("ranges").querySelectorAll(".chip")) c.setAttribute("aria-pressed", c.dataset.id === id); }
+function updateNameHint() {
+  const name = $("student").value.trim();
+  const done = name ? doneSetsFor(name) : new Set();
+  buildChips(done);
+  const hint = $("nameHint");
+  if (!name || !done.size) { hint.hidden = true; return; }
+  const next = RANGES.find(r => !done.has(r.label));
+  if (next) selectRange(next.id);
+  hint.textContent = `${name} has finished ${RANGES.filter(r => done.has(r.label)).map(r => r.label).join(", ")}.` + (next ? ` Next up: ${next.label}.` : " All 300 words are done.");
+  hint.hidden = false;
+}
+function setLabel(c) { return c.range === "retest" || c.range === "all" ? null : rangeOf(c.range).label; }
+function doneSetsFor(name) { const n = name.toLowerCase(); return new Set(getChecks().filter(c => c.student.toLowerCase() === n && setLabel(c)).map(setLabel)); }
 function wordsLabel(c) {
   if (c.range === "retest") return `Retest of ${c.retestOf.date} not-yet words`;
-  return "Fry " + (c.range === "all" ? "1–100" : rangeOf(c.range).label);
+  return "Fry " + rangeOf(c.range).label;
 }
 function counts(c) {
   c = c || state;
@@ -307,12 +352,8 @@ function saveDraft() { writeJSON(K_DRAFT, state); }
 
 // ---------- setup ----------
 $("date").value = today();
-for (const r of RANGES) {
-  const b = document.createElement("button");
-  b.className = "chip"; b.textContent = r.label; b.setAttribute("aria-pressed", r.id === rangeId);
-  b.onclick = () => { rangeId = r.id; for (const c of $("ranges").children) c.setAttribute("aria-pressed", c === b); };
-  $("ranges").appendChild(b);
-}
+buildChips();
+$("student").addEventListener("input", updateNameHint);
 function checkDraft() {
   const d = readJSON(K_DRAFT, null);
   const done = d && d.answers ? d.answers.filter(a => a.known !== null).length : 0;
@@ -323,13 +364,16 @@ function checkDraft() {
   return d;
 }
 $("resumeBtn").onclick = () => { const d = checkDraft(); if (d) { state = d; showTest(); } };
+function startCheck(name, rid, date) {
+  const r = rangeOf(rid);
+  state = { id: uid(), student: name, date: date || today(), range: r.id, i: 0, createdAt: Date.now(), updatedAt: Date.now(),
+    answers: FRY.slice(r.from - 1, r.to).map((w, k) => ({ n: r.from + k, word: w, known: null })) };
+  saveDraft(); showTest();
+}
 $("startBtn").onclick = () => {
   const name = $("student").value.trim();
   if (!name) { $("student").focus(); $("student").placeholder = "Type a name to start"; return; }
-  const r = rangeOf(rangeId);
-  state = { id: uid(), student: name, date: $("date").value || today(), range: r.id, i: 0, createdAt: Date.now(), updatedAt: Date.now(),
-    answers: FRY.slice(r.from - 1, r.to).map((w, k) => ({ n: r.from + k, word: w, known: null })) };
-  saveDraft(); showTest();
+  startCheck(name, rangeId, $("date").value);
 };
 
 // ---------- test ----------
@@ -386,10 +430,15 @@ function showResults(note) {
   $("cardsBox").hidden = missed.length === 0;
   $("cardsStatus").hidden = true;
   $("cardsNote").textContent = `Print the ${missed.length} “not yet” word${missed.length === 1 ? "" : "s"} as 2.5 × 1 inch cards, 30 to a page with cut lines.`;
+  const nx = nextSetAfter(state.range);
+  $("nextSetBtn").hidden = !nx;
+  if (nx) $("nextSetBtn").textContent = `Next set: ${nx.label} for ${state.student}`;
+  $("nextBtn").className = nx ? "btn ghost" : "btn primary";
   window.scrollTo(0, 0);
 }
 $("redoBtn").onclick = () => showTest();
-$("nextBtn").onclick = () => { state = null; $("student").value = ""; checkDraft(); show("setup"); $("student").focus(); };
+$("nextBtn").onclick = () => { state = null; $("student").value = ""; checkDraft(); updateNameHint(); show("setup"); $("student").focus(); };
+$("nextSetBtn").onclick = () => { const nx = nextSetAfter(state.range); if (nx) startCheck(state.student, nx.id); };
 
 function csvCell(v) { v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function toCSV(c) {
@@ -415,10 +464,30 @@ function renderSaved() {
     .filter(c => !q || c.student.toLowerCase().includes(q));
   $("savedEmpty").hidden = list.length > 0;
   $("savedEmpty").textContent = q ? "No saved checks match that name." : "No saved checks yet. Finished checks show up here.";
-  $("savedList").replaceChildren(...list.map(c => {
+  const groups = new Map();
+  for (const c of list) { const k = c.student.trim().toLowerCase(); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(c); }
+  const keys = [...groups.keys()].sort((a, b) => a.localeCompare(b));
+  $("savedList").replaceChildren(...keys.map(k => {
+    const checks = groups.get(k); const name = checks[0].student;
+    const wrap = document.createElement("li"); wrap.className = "stu";
+    const head = document.createElement("b"); head.textContent = name;
+    const prog = document.createElement("div"); prog.className = "prog";
+    for (const r of RANGES) {
+      const latest = checks.find(c => setLabel(c) === r.label);
+      const pl = document.createElement("span"); pl.className = "pill" + (latest ? " on" : "");
+      pl.textContent = latest ? `${r.label} ✓ ${scoreText(latest).replace(" of ", "/")}` : r.label;
+      prog.appendChild(pl);
+    }
+    const rows = document.createElement("ul"); rows.className = "saved-list";
+    rows.append(...checks.map(checkRow));
+    wrap.append(head, prog, rows); return wrap;
+  }));
+  refreshBanners();
+}
+function checkRow(c) {
     const li = document.createElement("li");
     const meta = document.createElement("div"); meta.className = "meta";
-    meta.innerHTML = `<b>${esc(c.student)}</b><span><i class="dot ${needsBackup(c) ? "" : "ok"}" title="${needsBackup(c) ? "Not backed up yet" : "Backed up"}"></i>${esc(c.date)} · ${esc(wordsLabel(c))} · ${scoreText(c)}</span>`;
+    meta.innerHTML = `<span><i class="dot ${needsBackup(c) ? "" : "ok"}" title="${needsBackup(c) ? "Not backed up yet" : "Backed up"}"></i>${esc(c.date)} · ${esc(wordsLabel(c))} · ${scoreText(c)}</span>`;
     const acts = document.createElement("div"); acts.className = "acts";
     const open = mk("Open", () => { state = JSON.parse(JSON.stringify(c)); showResults(""); });
     const retest = mk("Retest", () => startRetest(c));
@@ -429,8 +498,6 @@ function renderSaved() {
       setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = "Delete"; del.classList.remove("danger"); } }, 4000);
     });
     acts.append(open, retest, del); li.append(meta, acts); return li;
-  }));
-  refreshBanners();
 }
 function mk(label, fn) { const b = document.createElement("button"); b.className = "btn ghost small"; b.textContent = label; b.onclick = fn; return b; }
 $("filter").oninput = renderSaved;
@@ -598,7 +665,7 @@ async function upload(meta, content, type, fileId) {
   return (await gfetch(path, { method: fileId ? "PATCH" : "POST", headers: { "Content-Type": `multipart/related; boundary=${b}` }, body })).json();
 }
 function sheetTitle(c) {
-  return c.range === "retest" ? `Fry retest - ${c.student} - ${c.date}` : `Fry ${c.range === "all" ? "1-100" : rangeOf(c.range).label.replace("–", "-")} - ${c.student} - ${c.date}`;
+  return c.range === "retest" ? `Fry retest - ${c.student} - ${c.date}` : `Fry ${rangeOf(c.range).label.replace("–", "-")} - ${c.student} - ${c.date}`;
 }
 $("driveBackupBtn").onclick = () => {
   const btn = $("driveBackupBtn");

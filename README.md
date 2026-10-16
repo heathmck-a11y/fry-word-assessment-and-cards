@@ -1,12 +1,15 @@
 # Fry Word Check
 
-A quick check of the first 100 Fry words for K–2 students, with printable practice cards.
+A quick check of the first 300 Fry words for K–2 students, in sets of 25, with printable practice cards.
 
 **Use it here:** https://heathmck-a11y.github.io/fry-word-assessment-and-cards/
 
 ## What it does
 
-- The adult enters the student's name and picks all 100 words or a set of 25 (1–25, 26–50, 51–75, 76–100).
+- The adult enters the student's name and picks a set of 25 words (1–25 through 276–300). Each set is its own finished check.
+- When a name the app knows is typed, it marks the sets that student has finished and picks the next one.
+- After a set, **Next set** starts the following 25 words for the same student.
+- Saved checks are grouped by student, with each student's progress through all 12 sets and their scores.
 - Words show one at a time on an index card. The adult taps **Yes** or **No**. The buttons are small and plain so the student can't tell which was tapped. On a laptop, the Y and N keys work too.
 - The results show the score, the "not yet" words, and every word checked.
 - **Download cards (PDF)** prints the "not yet" words as 2.5 × 1 inch cards, 30 to a page with cut lines. Print at 100% (actual size).
@@ -48,6 +51,10 @@ The app works without this. These steps only turn on the two Google Drive button
 8. In this repo, open **config.js**, click the pencil to edit, paste the Client ID between the quotes, and commit.
 
 If teachers use school Google accounts, the district's Google Workspace admin may need to allow the app before they can sign in.
+
+## Word list
+
+Words 1–300 follow Fry's Instant Words in the classic order and word forms (for example "following, turned, asked"). Some newer printings use base forms instead ("follow, turn, ask"). To change a word, edit the `FRY` list near the top of the script in `index.html`.
 
 ## Files
 
