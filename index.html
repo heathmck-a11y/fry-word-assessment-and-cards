@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fry Word Check</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 64 40%27%3E%3Crect width=%2764%27 height=%2740%27 rx=%274%27 fill=%27%23fff%27 stroke=%27%231f6f78%27 stroke-width=%273%27/%3E%3Cline x1=%270%27 y1=%2710%27 x2=%2764%27 y2=%2710%27 stroke=%27%23e07a7a%27 stroke-width=%273%27/%3E%3C/svg%3E">
+<meta name="description" content="Quick check of the first 100 Fry words with printable practice cards.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="config.js"></script>
+<style>
+[hidden] { display: none !important; }
+
+/* Layout: one working column. Setup, flash card, results, saved checks, backup. */
+:root {
+  --bg: #eef2f4;
+  --surface: #ffffff;
+  --ink: #1d2b33;
+  --muted: #5d6b73;
+  --line: #d3dde2;
+  --accent: #1f6f78;
+  --accent-ink: #ffffff;
+  --yes: #2e7d4f;
+  --yes-soft: #e3f2e8;
+  --no: #b5523b;
+  --no-soft: #f8e6e1;
+  --card-rule: #9cc3e0;
+  --card-red: #e07a7a;
+  --font-word: "Lexend", "Century Gothic", system-ui, sans-serif;
+  --font-ui: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141b1f; --surface: #1e282e; --ink: #e7eef1; --muted: #9aa9b1; --line: #33424a;
+    --accent: #5fb3bb; --accent-ink: #0f1a1d; --yes: #6cc28f; --yes-soft: #1d3327; --no: #e48d76; --no-soft: #3a2420;
+    --card-rule: #2f4d63; --card-red: #8a4545; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141b1f; --surface: #1e282e; --ink: #e7eef1; --muted: #9aa9b1; --line: #33424a;
+  --accent: #5fb3bb; --accent-ink: #0f1a1d; --yes: #6cc28f; --yes-soft: #1d3327; --no: #e48d76; --no-soft: #3a2420;
+  --card-rule: #2f4d63; --card-red: #8a4545; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 32px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-word); font-size: 30px; margin: 0; letter-spacing: 0.01em; }
+h2 { font-size: 20px; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 15px; margin: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+label.field { display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 15px; }
+input[type=text], input[type=date] {
+  font: inherit; font-weight: 400; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); width: 100%;
+}
+input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.row > * { flex: 1 1 200px; min-width: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.btn { font: inherit; font-weight: 700; padding: 12px 20px; border-radius: 10px; border: 1.5px solid transparent; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.legend { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; }
+
+/* Flash card */
+.progress { display: flex; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 15px; }
+.bar { flex: 1; height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+.card {
+  position: relative; background: var(--surface); border-radius: 6px; border: 1px solid var(--line);
+  aspect-ratio: 5 / 3; max-width: 100%; display: grid; place-items: center; overflow: hidden;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(16.6% - 1px), var(--card-rule) calc(16.6% - 1px), var(--card-rule) 16.6%);
+  background-position: 0 18%;
+  box-shadow: 0 1px 0 var(--line), 0 10px 24px -14px rgba(0,0,0,.35);
+}
+.card::before { content: ""; position: absolute; left: 0; right: 0; top: 17%; height: 2px; background: var(--card-red); }
+.card .num { position: absolute; top: 8px; right: 12px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.card .word { font-family: var(--font-word); font-size: clamp(64px, 16vw, 132px); line-height: 1; position: relative; z-index: 1; padding: 0 16px; text-align: center; }
+.answers { display: flex; justify-content: center; gap: 10px; }
+.ans { font: inherit; font-size: 15px; font-weight: 400; min-width: 96px; min-height: 44px; padding: 8px 18px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+.ans:hover { color: var(--ink); }
+.ans:active { transform: translateY(1px); }
+.tools { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.hint { font-size: 13px; color: var(--muted); }
+
+/* Results */
+.score { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.score b { font-family: var(--font-word); font-size: 56px; line-height: 1; font-variant-numeric: tabular-nums; }
+.wordgrid { display: flex; flex-wrap: wrap; gap: 6px; }
+.w { font-family: var(--font-word); font-size: 18px; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); }
+.w.k { background: var(--yes-soft); border-color: transparent; color: var(--ink); }
+.w.m { background: var(--no-soft); border-color: transparent; color: var(--ink); }
+.w.u { color: var(--muted); border-style: dashed; }
+.status { font-size: 15px; padding: 12px 14px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.status.ok { border-color: var(--yes); }
+.status.err { border-color: var(--no); }
+.status a { color: var(--accent); font-weight: 700; }
+.cards-box { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--line); }
+.saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.saved-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.saved-list li a { color: var(--accent); min-width: 0; overflow-wrap: anywhere; }
+.btn.small { padding: 6px 14px; font-size: 14px; flex: 0 0 auto; }
+@media (max-width: 480px) { .score b { font-size: 44px; } }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+
+.banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: 12px; border: 1.5px solid var(--no); background: var(--no-soft); font-size: 15px; }
+.banner a { color: var(--ink); font-weight: 700; }
+.saved-list .meta { display: flex; flex-direction: column; min-width: 0; }
+.saved-list .meta b { overflow-wrap: anywhere; }
+.saved-list .meta span { color: var(--muted); font-size: 14px; }
+.saved-list .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.btn.danger { color: var(--no); border-color: var(--no); }
+.backup-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.backup-grid .btn { flex: 1 1 200px; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--no); margin-right: 6px; vertical-align: middle; }
+.dot.ok { background: var(--yes); }
+input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); width: 100%; }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fry Word Check</h1>
+    <p class="sub">First 100 Fry words · saved on this device</p>
+  </header>
+
+  <div class="banner" id="backupBanner" hidden>
+    <span id="backupBannerText"></span>
+    <a href="#backup">Back up now</a>
+  </div>
+  <div class="banner" id="storageBanner" hidden>
+    <span>This browser isn't keeping saved checks. Use Download backup file after each check so results aren't lost.</span>
+  </div>
+
+  <!-- SETUP -->
+  <section class="panel" id="setup">
+    <div class="row">
+      <label class="field">Student name
+        <input type="text" id="student" autocomplete="off" placeholder="First name and last initial">
+      </label>
+      <label class="field">Date
+        <input type="date" id="date">
+      </label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="legend">Words to check</span>
+      <div class="chips" id="ranges"></div>
+    </div>
+    <div class="tools">
+      <span class="hint" id="resumeNote" hidden></span>
+      <div class="row" style="flex:0 0 auto;gap:10px">
+        <button class="btn ghost" id="resumeBtn" hidden>Resume last check</button>
+        <button class="btn primary" id="startBtn">Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEST -->
+  <section id="test" hidden style="display:flex;flex-direction:column;gap:16px">
+    <div class="progress"><span id="who"></span><div class="bar"><i id="barFill"></i></div><span id="count"></span></div>
+    <div class="card" aria-live="polite"><span class="num" id="wnum"></span><span class="word" id="word"></span></div>
+    <div class="answers">
+      <button class="ans" id="yesBtn" aria-label="Yes, read it">Yes</button>
+      <button class="ans" id="noBtn" aria-label="No, not yet">No</button>
+    </div>
+    <div class="tools">
+      <button class="btn ghost" id="backBtn">Back</button>
+      <span class="hint">Keys: Y = yes · N = no · Backspace = back</span>
+      <button class="btn ghost" id="stopBtn">Stop and see results</button>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="panel" id="results" hidden>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <h2 id="resTitle"></h2>
+      <div class="score"><b id="resScore"></b><span class="sub" id="resOf"></span></div>
+    </div>
+    <div class="status ok" id="savedLocal" hidden></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="legend">Not yet (practice these)</span>
+      <div class="wordgrid" id="missed"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span class="legend">All words checked</span>
+      <div class="wordgrid" id="all"></div>
+    </div>
+    <div class="tools">
+      <button class="btn ghost" id="redoBtn">Back to the words</button>
+      <button class="btn ghost" id="copyBtn">Copy results</button>
+    </div>
+    <div class="cards-box" id="cardsBox">
+      <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+        <span class="legend">Practice cards</span>
+        <span class="sub" id="cardsNote"></span>
+      </div>
+      <button class="btn primary" id="cardsBtn">Download cards (PDF)</button>
+    </div>
+    <div class="status" id="cardsStatus" hidden></div>
+    <button class="btn primary" id="nextBtn">Next student</button>
+  </section>
+
+  <!-- SAVED -->
+  <section class="panel" id="savedPanel">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <h2>Saved checks</h2>
+      <p class="sub">Open a check to see results or print cards. Retest checks a student again on just the words they missed.</p>
+    </div>
+    <input type="search" id="filter" placeholder="Find a student" aria-label="Find a student">
+    <ul class="saved-list" id="savedList"></ul>
+    <p class="sub" id="savedEmpty">No saved checks yet. Finished checks show up here.</p>
+  </section>
+
+  <!-- BACKUP -->
+  <section class="panel" id="backup">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <h2>Backup</h2>
+      <p class="sub" id="backupSummary"></p>
+    </div>
+    <div class="backup-grid">
+      <button class="btn primary" id="driveBackupBtn">Back up to my Google Drive</button>
+      <button class="btn ghost" id="driveRestoreBtn">Restore from my Google Drive</button>
+    </div>
+    <p class="sub" id="driveNote"></p>
+    <div class="backup-grid">
+      <button class="btn ghost" id="fileBackupBtn">Download backup file</button>
+      <button class="btn ghost" id="fileRestoreBtn">Load backup file</button>
+      <input type="file" id="fileInput" accept=".json,application/json" hidden>
+    </div>
+    <div class="status" id="backupStatus" hidden></div>
+  </section>
+</div>
+
+<script>
+const FRY = "the of and a to in is you that it he was for on are as with his they I at be this have from or one had by words but not what all were we when your can said there use an each which she do how their if will up other about out many then them these so some her would make like him into time has look two more write go see number no way could people my than first water been called who oil sit now find long down day did get come made may part".split(" ");
+const RANGES = [
+  { id: "all", label: "All 100", from: 1, to: 100 },
+  { id: "1", label: "1–25", from: 1, to: 25 },
+  { id: "2", label: "26–50", from: 26, to: 50 },
+  { id: "3", label: "51–75", from: 51, to: 75 },
+  { id: "4", label: "76–100", from: 76, to: 100 },
+];
+const CFG = window.FRY_CONFIG || {};
+const CLIENT_ID = (CFG.googleClientId || "").trim();
+const FOLDER = "Fry Word Assessments";
+const BACKUP_NAME = "fry-checks-backup.json";
+const K_CHECKS = "fryChecks.v1", K_DRAFT = "fryCheckDraft.v1", K_META = "fryMeta.v1";
+
+const $ = id => document.getElementById(id);
+let state = null;      // the check being given or viewed
+let rangeId = "all";
+
+// ---------- storage ----------
+let storageOk = true;
+function readJSON(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { storageOk = false; return d; } }
+function writeJSON(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { storageOk = false; return false; } }
+function removeKey(k) { try { localStorage.removeItem(k); } catch (e) {} }
+const getChecks = () => readJSON(K_CHECKS, []);
+const setChecks = list => writeJSON(K_CHECKS, list);
+const getMeta = () => readJSON(K_META, {});
+const setMeta = m => writeJSON(K_META, m);
+function upsertCheck(c) {
+  const list = getChecks(); const i = list.findIndex(x => x.id === c.id);
+  const copy = JSON.parse(JSON.stringify(c));
+  if (i >= 0) list[i] = copy; else list.push(copy);
+  const ok = setChecks(list);
+  if (ok && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  return ok;
+}
+function needsBackup(c) { return !c.backedUpAt || c.backedUpAt < c.updatedAt; }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+function today() {
+  const d = new Date(); const p = n => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function rangeOf(id) { return RANGES.find(r => r.id === id) || RANGES[0]; }
+function wordsLabel(c) {
+  if (c.range === "retest") return `Retest of ${c.retestOf.date} not-yet words`;
+  return "Fry " + (c.range === "all" ? "1–100" : rangeOf(c.range).label);
+}
+function counts(c) {
+  c = c || state;
+  return { known: c.answers.filter(a => a.known === true), missed: c.answers.filter(a => a.known === false), untested: c.answers.filter(a => a.known === null) };
+}
+function scoreText(c) { const { known, missed } = counts(c); return `${known.length} of ${known.length + missed.length}`; }
+function esc(t) { const d = document.createElement("div"); d.textContent = t; return d.innerHTML; }
+function show(id) {
+  for (const s of ["setup", "test", "results"]) $(s).hidden = s !== id;
+  $("savedPanel").hidden = $("backup").hidden = id === "test";
+  refreshBanners();
+}
+function saveDraft() { writeJSON(K_DRAFT, state); }
+
+// ---------- setup ----------
+$("date").value = today();
+for (const r of RANGES) {
+  const b = document.createElement("button");
+  b.className = "chip"; b.textContent = r.label; b.setAttribute("aria-pressed", r.id === rangeId);
+  b.onclick = () => { rangeId = r.id; for (const c of $("ranges").children) c.setAttribute("aria-pressed", c === b); };
+  $("ranges").appendChild(b);
+}
+function checkDraft() {
+  const d = readJSON(K_DRAFT, null);
+  const done = d && d.answers ? d.answers.filter(a => a.known !== null).length : 0;
+  const finished = d && getChecks().some(c => c.id === d.id);
+  const show_ = d && done > 0 && !finished;
+  $("resumeNote").hidden = $("resumeBtn").hidden = !show_;
+  if (show_) $("resumeNote").textContent = `Unfinished: ${d.student || "student"}, ${done} of ${d.answers.length} words.`;
+  return d;
+}
+$("resumeBtn").onclick = () => { const d = checkDraft(); if (d) { state = d; showTest(); } };
+$("startBtn").onclick = () => {
+  const name = $("student").value.trim();
+  if (!name) { $("student").focus(); $("student").placeholder = "Type a name to start"; return; }
+  const r = rangeOf(rangeId);
+  state = { id: uid(), student: name, date: $("date").value || today(), range: r.id, i: 0, createdAt: Date.now(), updatedAt: Date.now(),
+    answers: FRY.slice(r.from - 1, r.to).map((w, k) => ({ n: r.from + k, word: w, known: null })) };
+  saveDraft(); showTest();
+};
+
+// ---------- test ----------
+function showTest() { show("test"); renderCard(); $("yesBtn").focus(); }
+function renderCard() {
+  if (state.i >= state.answers.length) state.i = state.answers.length - 1;
+  const a = state.answers[state.i];
+  $("word").textContent = a.word; $("wnum").textContent = "#" + a.n; $("who").textContent = state.student;
+  $("count").textContent = `${state.i + 1} / ${state.answers.length}`;
+  $("barFill").style.width = (state.i / state.answers.length * 100) + "%";
+  $("backBtn").disabled = state.i === 0;
+}
+function answer(known) {
+  state.answers[state.i].known = known;
+  if (state.i < state.answers.length - 1) { state.i++; saveDraft(); renderCard(); }
+  else { saveDraft(); finish(); }
+}
+$("yesBtn").onclick = () => answer(true);
+$("noBtn").onclick = () => answer(false);
+$("backBtn").onclick = () => { if (state.i > 0) { state.i--; saveDraft(); renderCard(); } };
+$("stopBtn").onclick = () => finish();
+document.addEventListener("keydown", e => {
+  if ($("test").hidden || e.target.tagName === "INPUT") return;
+  const k = e.key.toLowerCase();
+  if (k === "y" || k === "1") { e.preventDefault(); answer(true); }
+  else if (k === "n" || k === "2") { e.preventDefault(); answer(false); }
+  else if (k === "backspace" || k === "arrowleft") { e.preventDefault(); $("backBtn").click(); }
+});
+
+// ---------- results ----------
+function finish() {
+  state.updatedAt = Date.now();
+  const ok = upsertCheck(state);
+  removeKey(K_DRAFT);
+  showResults(ok ? "Saved on this device." : "This browser couldn't save the check. Use Copy results or Download backup file now.");
+  renderSaved();
+}
+function chip(a) {
+  const s = document.createElement("span");
+  s.className = "w " + (a.known === true ? "k" : a.known === false ? "m" : "u");
+  s.textContent = a.word; s.title = "#" + a.n + (a.known === null ? " (not checked)" : "");
+  return s;
+}
+function showResults(note) {
+  show("results");
+  const { known, missed, untested } = counts();
+  $("resTitle").textContent = `${state.student} · ${state.date} · ${wordsLabel(state)}`;
+  $("resScore").textContent = known.length;
+  $("resOf").textContent = `of ${known.length + missed.length} words read correctly` + (untested.length ? ` (${untested.length} not checked)` : "")
+    + (state.retestOf ? `. Last check (${state.retestOf.date}): ${state.retestOf.score}, ${state.retestOf.words}.` : "");
+  $("missed").replaceChildren(...(missed.length ? missed.map(chip) : [Object.assign(document.createElement("span"), { className: "sub", textContent: "None. Every word checked was read." })]));
+  $("all").replaceChildren(...state.answers.map(chip));
+  $("savedLocal").hidden = !note; if (note) $("savedLocal").textContent = note;
+  $("cardsBox").hidden = missed.length === 0;
+  $("cardsStatus").hidden = true;
+  $("cardsNote").textContent = `Print the ${missed.length} “not yet” word${missed.length === 1 ? "" : "s"} as 2.5 × 1 inch cards, 30 to a page with cut lines.`;
+  window.scrollTo(0, 0);
+}
+$("redoBtn").onclick = () => showTest();
+$("nextBtn").onclick = () => { state = null; $("student").value = ""; checkDraft(); show("setup"); $("student").focus(); };
+
+function csvCell(v) { v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function toCSV(c) {
+  const { known, missed, untested } = counts(c);
+  const rows = [["Student", c.student], ["Date", c.date], ["Words", wordsLabel(c)],
+    ["Read correctly", `${known.length} of ${known.length + missed.length}`], ["Not yet", missed.map(a => a.word).join(", ")]];
+  if (untested.length) rows.push(["Not checked", untested.map(a => a.word).join(", ")]);
+  if (c.retestOf) rows.push(["Last check", `${c.retestOf.date}: ${c.retestOf.score} (${c.retestOf.words})`]);
+  rows.push([], ["#", "Word", "Read it?"]);
+  for (const a of c.answers) rows.push([a.n, a.word, a.known === true ? "Yes" : a.known === false ? "No" : "Not checked"]);
+  return rows.map(r => r.map(csvCell).join(",")).join("\n");
+}
+$("copyBtn").onclick = async () => {
+  try { await navigator.clipboard.writeText(toCSV(state)); $("copyBtn").textContent = "Copied"; }
+  catch (e) { $("copyBtn").textContent = "Copy didn't work"; }
+  setTimeout(() => $("copyBtn").textContent = "Copy results", 1500);
+};
+
+// ---------- saved checks ----------
+function renderSaved() {
+  const q = $("filter").value.trim().toLowerCase();
+  const list = getChecks().sort((a, b) => (b.date + b.createdAt).localeCompare(a.date + a.createdAt))
+    .filter(c => !q || c.student.toLowerCase().includes(q));
+  $("savedEmpty").hidden = list.length > 0;
+  $("savedEmpty").textContent = q ? "No saved checks match that name." : "No saved checks yet. Finished checks show up here.";
+  $("savedList").replaceChildren(...list.map(c => {
+    const li = document.createElement("li");
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.innerHTML = `<b>${esc(c.student)}</b><span><i class="dot ${needsBackup(c) ? "" : "ok"}" title="${needsBackup(c) ? "Not backed up yet" : "Backed up"}"></i>${esc(c.date)} · ${esc(wordsLabel(c))} · ${scoreText(c)}</span>`;
+    const acts = document.createElement("div"); acts.className = "acts";
+    const open = mk("Open", () => { state = JSON.parse(JSON.stringify(c)); showResults(""); });
+    const retest = mk("Retest", () => startRetest(c));
+    if (!counts(c).missed.length) retest.disabled = true;
+    const del = mk("Delete", () => {
+      if (del.dataset.armed) { setChecks(getChecks().filter(x => x.id !== c.id)); renderSaved(); refreshBanners(); return; }
+      del.dataset.armed = "1"; del.textContent = "Tap again to delete"; del.classList.add("danger");
+      setTimeout(() => { if (del.isConnected) { delete del.dataset.armed; del.textContent = "Delete"; del.classList.remove("danger"); } }, 4000);
+    });
+    acts.append(open, retest, del); li.append(meta, acts); return li;
+  }));
+  refreshBanners();
+}
+function mk(label, fn) { const b = document.createElement("button"); b.className = "btn ghost small"; b.textContent = label; b.onclick = fn; return b; }
+$("filter").oninput = renderSaved;
+function startRetest(c) {
+  const missed = counts(c).missed.map(a => ({ n: a.n, word: a.word, known: null }));
+  if (!missed.length) return;
+  state = { id: uid(), student: c.student, date: today(), range: "retest", i: 0, createdAt: Date.now(), updatedAt: Date.now(),
+    answers: missed, retestOf: { date: c.date, score: scoreText(c), words: wordsLabel(c) } };
+  saveDraft(); showTest();
+}
+
+// ---------- practice cards ----------
+async function wordImage(word) {
+  const W = 460, H = 160; // 2.3 x 0.8 in at 200 dpi
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  let size = 112;
+  const fam = '"Lexend", "Century Gothic", sans-serif';
+  g.font = `${size}px ${fam}`;
+  while (g.measureText(word).width > W - 20 && size > 40) { size -= 4; g.font = `${size}px ${fam}`; }
+  const m = g.measureText("bdpqy" );
+  const asc = m.fontBoundingBoxAscent || size * 0.9, desc = m.fontBoundingBoxDescent || size * 0.3;
+  const scale = Math.min(1, (H - 8) / (asc + desc));
+  if (scale < 1) { size = Math.floor(size * scale); g.font = `${size}px ${fam}`; }
+  const m2 = g.measureText("bdpqy");
+  const a2 = m2.fontBoundingBoxAscent || size * 0.9, d2 = m2.fontBoundingBoxDescent || size * 0.3;
+  g.fillStyle = "#111"; g.textAlign = "center"; g.textBaseline = "alphabetic";
+  g.fillText(word, W / 2, (H + a2 - d2) / 2);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+async function buildCardsPdf() {
+  if (!window.jspdf || !window.jspdf.jsPDF) throw { code: "nolib" };
+  try { await document.fonts.load('112px "Lexend"'); } catch (e) {}
+  const { missed } = counts();
+  const doc = new window.jspdf.jsPDF({ unit: "in", format: "letter", orientation: "portrait", compress: true });
+  const CW = 2.5, CH = 1, COLS = 3, ROWS = 10, X0 = 0.5, Y0 = 0.5, PER = COLS * ROWS;
+  const label = state.student.slice(0, 28);
+  for (let i = 0; i < missed.length; i++) {
+    const k = i % PER;
+    if (k === 0 && i > 0) doc.addPage();
+    const col = k % COLS, row = Math.floor(k / COLS);
+    const x = X0 + col * CW, y = Y0 + row * CH;
+    doc.setDrawColor(170); doc.setLineWidth(0.01); doc.rect(x, y, CW, CH);
+    doc.addImage(await wordImage(missed[i].word), "JPEG", x + 0.1, y + 0.08, 2.3, 0.8);
+    doc.setFontSize(6); doc.setTextColor(150);
+    doc.text(`${label}  #${missed[i].n}`, x + 0.08, y + CH - 0.07);
+  }
+  return doc;
+}
+
+function cardsFilename() { return `Fry practice cards - ${state.student} - ${state.date}.pdf`.replace(/[\\/:*?"<>|]/g, ""); }
+function saveBlob(blob, name) {
+  const url = URL.createObjectURL(blob); const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+$("cardsBtn").onclick = async () => {
+  const btn = $("cardsBtn"); btn.disabled = true; btn.textContent = "Making cards…";
+  const st = $("cardsStatus");
+  try {
+    const doc = await buildCardsPdf();
+    saveBlob(doc.output("blob"), cardsFilename());
+    st.className = "status ok"; st.textContent = "Cards downloaded. Print at 100% (actual size) so each card comes out 2.5 × 1 inches.";
+  } catch (e) {
+    st.className = "status err"; st.textContent = e && e.code === "nolib" ? "The card maker didn't load. Check the internet connection and reload the page." : "The cards couldn't be made. Reload the page and try again.";
+  } finally { st.hidden = false; btn.disabled = false; btn.textContent = "Download cards (PDF)"; }
+};
+
+// ---------- backup: banners and summary ----------
+function refreshBanners() {
+  const list = getChecks(); const pending = list.filter(needsBackup).length; const m = getMeta();
+  $("storageBanner").hidden = storageOk;
+  const banner = pending > 0 && $("test").hidden;
+  $("backupBanner").hidden = !banner;
+  if (banner) $("backupBannerText").textContent = `${pending} check${pending === 1 ? " isn't" : "s aren't"} backed up yet. Checks saved only in this browser can be lost if browsing data is cleared.`;
+  const last = m.lastBackup ? new Date(m.lastBackup).toLocaleString() : "never";
+  $("backupSummary").textContent = `${list.length} check${list.length === 1 ? "" : "s"} saved on this device · ${pending} not backed up · last backup: ${last}.`;
+}
+function backupStatus(kind, html) { const s = $("backupStatus"); s.className = "status " + (kind || ""); s.innerHTML = html; s.hidden = false; }
+function markAllBackedUp() {
+  const now = Date.now(); const list = getChecks().map(c => ({ ...c, backedUpAt: now }));
+  setChecks(list); const m = getMeta(); m.lastBackup = now; setMeta(m); renderSaved();
+}
+function mergeChecks(incoming) {
+  const list = getChecks(); let added = 0, updated = 0;
+  for (const c of incoming) {
+    if (!c || !c.id || !Array.isArray(c.answers) || !c.student) continue;
+    const i = list.findIndex(x => x.id === c.id);
+    if (i < 0) { list.push(c); added++; }
+    else if ((c.updatedAt || 0) > (list[i].updatedAt || 0)) { list[i] = c; updated++; }
+  }
+  setChecks(list); renderSaved();
+  return { added, updated };
+}
+
+// ---------- backup: file ----------
+$("fileBackupBtn").onclick = () => {
+  const data = { app: "fry-word-check", version: 1, exportedAt: new Date().toISOString(), checks: getChecks() };
+  saveBlob(new Blob([JSON.stringify(data, null, 1)], { type: "application/json" }), `fry-checks-backup-${today()}.json`);
+  markAllBackedUp();
+  backupStatus("ok", "Backup file downloaded. Keep it somewhere safe, like your email or Google Drive. Use Load backup file to bring the checks back.");
+};
+$("fileRestoreBtn").onclick = () => $("fileInput").click();
+$("fileInput").onchange = async () => {
+  const f = $("fileInput").files[0]; $("fileInput").value = "";
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!data || !Array.isArray(data.checks)) throw new Error("bad");
+    const { added, updated } = mergeChecks(data.checks);
+    backupStatus("ok", `Loaded the backup file: ${added} check${added === 1 ? "" : "s"} added, ${updated} updated.`);
+  } catch (e) { backupStatus("err", "That file isn't a Fry Word Check backup. Choose the file named like fry-checks-backup-2026-10-16.json."); }
+};
+
+// ---------- backup: Google Drive ----------
+let accessToken = null, tokenExp = 0, tokenClient = null, pendingToken = null;
+function initGoogle() {
+  if (!CLIENT_ID) {
+    $("driveBackupBtn").disabled = $("driveRestoreBtn").disabled = true;
+    $("driveNote").textContent = "Google Drive backup isn't turned on for this copy of the app yet. Use Download backup file instead.";
+    return;
+  }
+  $("driveNote").textContent = "Saves each check as a Google Sheet in a “Fry Word Assessments” folder in your own Drive. The app can only see files it made.";
+  const s = document.createElement("script"); s.src = "https://accounts.google.com/gsi/client"; s.async = true;
+  s.onload = () => {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID, scope: "https://www.googleapis.com/auth/drive.file",
+      callback: r => {
+        const p = pendingToken; pendingToken = null; if (!p) return;
+        if (r.error) return p.reject(new Error(r.error_description || "Google sign-in didn't finish."));
+        accessToken = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000; p.resolve(accessToken);
+      },
+      error_callback: e => {
+        const p = pendingToken; pendingToken = null; if (!p) return;
+        p.reject(new Error(e && e.type === "popup_closed" ? "The Google sign-in window was closed before finishing." :
+          e && e.type === "popup_failed_to_open" ? "The Google sign-in window was blocked. Allow pop-ups for this site and try again." : "Google sign-in didn't finish."));
+      },
+    });
+  };
+  s.onerror = () => { $("driveNote").textContent = "Google sign-in couldn't load. Check the internet connection, or use Download backup file."; };
+  document.head.appendChild(s);
+}
+function getToken() { // call directly from a click so the sign-in pop-up isn't blocked
+  if (accessToken && Date.now() < tokenExp - 60000) return Promise.resolve(accessToken);
+  if (!tokenClient) return Promise.reject(new Error("Google sign-in is still loading. Wait a moment and try again."));
+  return new Promise((resolve, reject) => { pendingToken = { resolve, reject }; tokenClient.requestAccessToken({ prompt: accessToken ? "" : "select_account" }); });
+}
+async function gfetch(path, opts = {}) {
+  const r = await fetch("https://www.googleapis.com" + path, { ...opts, headers: { Authorization: "Bearer " + accessToken, ...(opts.headers || {}) } });
+  if (r.status === 401) { accessToken = null; throw new Error("Your Google sign-in expired. Click the button again to sign in."); }
+  if (!r.ok) { let msg = ""; try { msg = (await r.json()).error.message; } catch (e) {} throw Object.assign(new Error("Google Drive said: " + (msg || r.status)), { status: r.status }); }
+  return r;
+}
+async function findOrCreateFolder() {
+  const q = encodeURIComponent(`name = '${FOLDER}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`);
+  const r = await (await gfetch(`/drive/v3/files?q=${q}&fields=files(id,webViewLink)&spaces=drive`)).json();
+  if (r.files && r.files.length) return r.files[0];
+  return (await gfetch("/drive/v3/files?fields=id,webViewLink", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: FOLDER, mimeType: "application/vnd.google-apps.folder" }) })).json();
+}
+async function upload(meta, content, type, fileId) {
+  const b = "fry" + Math.random().toString(36).slice(2);
+  const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n--${b}\r\nContent-Type: ${type}; charset=UTF-8\r\n\r\n${content}\r\n--${b}--`;
+  const path = fileId ? `/upload/drive/v3/files/${fileId}?uploadType=multipart&fields=id,webViewLink` : "/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink";
+  return (await gfetch(path, { method: fileId ? "PATCH" : "POST", headers: { "Content-Type": `multipart/related; boundary=${b}` }, body })).json();
+}
+function sheetTitle(c) {
+  return c.range === "retest" ? `Fry retest - ${c.student} - ${c.date}` : `Fry ${c.range === "all" ? "1-100" : rangeOf(c.range).label.replace("–", "-")} - ${c.student} - ${c.date}`;
+}
+$("driveBackupBtn").onclick = () => {
+  const btn = $("driveBackupBtn");
+  getToken().then(async () => {
+    btn.disabled = true; btn.textContent = "Backing up…";
+    backupStatus("", "Backing up to Google Drive…");
+    const folder = await findOrCreateFolder();
+    const list = getChecks(); let n = 0;
+    for (const c of list.filter(needsBackup)) {
+      let f;
+      try { f = c.driveFileId ? await upload({ name: sheetTitle(c) }, toCSV(c), "text/csv", c.driveFileId) : null; }
+      catch (e) { if (e.status !== 404) throw e; f = null; }
+      if (!f) f = await upload({ name: sheetTitle(c), mimeType: "application/vnd.google-apps.spreadsheet", parents: [folder.id] }, toCSV(c), "text/csv");
+      c.driveFileId = f.id; c.backedUpAt = Date.now(); n++;
+      setChecks(list);
+      backupStatus("", `Backing up to Google Drive… ${n} done`);
+    }
+    // one restore file with every check, used by "Restore from my Google Drive"
+    const m = getMeta();
+    const json = JSON.stringify({ app: "fry-word-check", version: 1, exportedAt: new Date().toISOString(), checks: list });
+    let bf = null;
+    try { bf = m.driveBackupId ? await upload({ name: BACKUP_NAME }, json, "application/json", m.driveBackupId) : null; }
+    catch (e) { if (e.status !== 404) throw e; }
+    if (!bf) bf = await upload({ name: BACKUP_NAME, mimeType: "application/json", parents: [folder.id] }, json, "application/json");
+    const now = Date.now();
+    setChecks(list.map(c => ({ ...c, backedUpAt: c.backedUpAt && c.backedUpAt >= c.updatedAt ? c.backedUpAt : now })));
+    m.driveBackupId = bf.id; m.lastBackup = now; setMeta(m); renderSaved();
+    backupStatus("ok", `Backed up. ${n} check${n === 1 ? "" : "s"} saved as Google Sheets.` + (folder.webViewLink ? ` <a href="${esc(folder.webViewLink)}" target="_blank" rel="noopener">Open the Fry Word Assessments folder</a>` : ""));
+  }).catch(e => backupStatus("err", esc(e.message || "Backing up didn't work. Try again."))).finally(() => { btn.disabled = false; btn.textContent = "Back up to my Google Drive"; });
+};
+$("driveRestoreBtn").onclick = () => {
+  const btn = $("driveRestoreBtn");
+  getToken().then(async () => {
+    btn.disabled = true; btn.textContent = "Restoring…";
+    const q = encodeURIComponent(`name = '${BACKUP_NAME}' and trashed = false`);
+    const r = await (await gfetch(`/drive/v3/files?q=${q}&fields=files(id,modifiedTime)&orderBy=modifiedTime desc&spaces=drive`)).json();
+    if (!r.files || !r.files.length) { backupStatus("err", "No backup found in your Google Drive yet. Back up from the device that has your checks first."); return; }
+    const data = await (await gfetch(`/drive/v3/files/${r.files[0].id}?alt=media`)).json();
+    const { added, updated } = mergeChecks(data.checks || []);
+    const m = getMeta(); m.driveBackupId = r.files[0].id; setMeta(m);
+    backupStatus("ok", `Restored from Google Drive: ${added} check${added === 1 ? "" : "s"} added, ${updated} updated.`);
+  }).catch(e => backupStatus("err", esc(e.message || "Restoring didn't work. Try again."))).finally(() => { btn.disabled = false; btn.textContent = "Restore from my Google Drive"; });
+};
+
+// ---------- start ----------
+initGoogle();
+checkDraft();
+renderSaved();
+show("setup");
+</script>
+</body>
+</html>
