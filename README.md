@@ -36,10 +36,10 @@ No data is ever sent anywhere else. Student results stay in the teacher's browse
 The app works without this. These steps only turn on the two Google Drive buttons.
 
 1. Go to https://console.cloud.google.com and sign in with the Google account you want to own the app.
-2. Create a new project, for example "Fry Word Check".
+2. Create a new project, for example "High-Frequency Word Check".
 3. In the search bar, find **Google Drive API** and click **Enable**.
 4. Go to **Google Auth Platform** (also listed as **OAuth consent screen**) and click **Get started**:
-   - App name: Fry Word Check. User support email: your email.
+   - App name: High-Frequency Word Check. User support email: your email.
    - Audience: **External** if teachers use different Google accounts, or **Internal** if everyone is in the same school Google Workspace.
    - Contact email: your email. Agree and create.
 5. Under **Data access**, click **Add or remove scopes**, check `.../auth/drive.file` ("See, edit, create, and delete only the specific Google Drive files you use with this app"), and save.
