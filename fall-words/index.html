@@ -38,12 +38,19 @@ h1 { font-size: clamp(24px, 6vw, 34px); margin: 0; font-weight: 700; color: var(
 .iconbtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 
-.adultbar { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; min-height: 40px; }
-.adult { font-size: 16px; color: var(--muted); text-align: center; margin: 0; }
-.adult b { color: var(--ink); font-weight: 600; }
+.target { display: flex; align-items: center; justify-content: center; gap: 18px; min-height: 120px; }
+.target .tpic { position: relative; flex: none; width: clamp(92px, 20vw, 124px); aspect-ratio: 1; background: #fff; border-radius: 18px; border: 5px solid var(--candy); display: grid; place-items: center; overflow: hidden; }
+.target .tpic img { width: 100%; height: 100%; object-fit: contain; }
+.target .tpic svg { width: 78%; height: 78%; }
+.target .tpic.pop { animation: pop .4s ease-out; }
+.cue { font-size: clamp(26px, 6vw, 38px); font-weight: 600; margin: 0; line-height: 1.15; }
+.cue b { color: var(--candy-2); }
+.status { font-size: clamp(18px, 4.4vw, 24px); margin: 4px 0 0; min-height: 1.3em; color: var(--muted); }
+.status.good { color: var(--candy-2); } .status.oops { color: #f3b49a; }
+.tools { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .small { font: inherit; font-size: 14px; color: var(--muted); background: transparent; border: 1.5px solid #5a4a7e; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
 
-.board { display: flex; flex-direction: column; align-items: center; gap: clamp(12px, 2.4vw, 20px); padding-top: 4px; }
+.board { display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 1.8vh, 18px); padding-top: 4px; }
 .flipcard { perspective: 900px; max-width: 100%; }
 .flipper { display: grid; transition: transform .8s cubic-bezier(.4,.1,.3,1); transform-style: preserve-3d; }
 .flipcard.flipped .flipper { transform: rotateY(180deg); }
@@ -56,7 +63,7 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 .pic { width: clamp(50px, 9vw, 78px); height: clamp(50px, 9vw, 78px); flex: none; }
 .pic svg { width: 100%; height: 100%; display: block; }
 .word { display: flex; }
-.lt { font-family: var(--letter); font-weight: 400; font-size: clamp(46px, 10vw, 88px); line-height: 1.2; color: var(--word-ink); background: none; border: 0; padding: 0 .015em; margin: 0; min-width: .32em; border-radius: 12px; cursor: pointer; }
+.lt { font-family: var(--letter); font-weight: 400; font-size: clamp(40px, min(8.5vw, 9.5vh), 76px); line-height: 1.2; color: var(--word-ink); background: none; border: 0; padding: 0 .015em; margin: 0; min-width: .32em; border-radius: 12px; cursor: pointer; }
 .lt:hover { background: #f1ecf9; }
 .lt.yes { background: var(--candy-2); animation: pop .45s ease-out; }
 .lt.miss { animation: shake .45s ease-in-out; color: #c0392b; }
@@ -116,7 +123,8 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
   </section>
 
   <main id="stage">
-    <div class="adultbar"><p class="adult" id="adult"></p><button class="small" id="skip">Ask a different one</button><button class="small" id="newWords">New words</button></div>
+    <div class="target"><div class="tpic" id="tpic"></div><div><p class="cue" id="cue"></p><p class="status" id="status" aria-live="polite"></p></div></div>
+    <div class="tools"><button class="small" id="skip">Ask a different one</button><button class="small" id="newWords">New words</button></div>
     <div class="nothere-wrap"><button class="nothere" id="notHere" hidden><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="28" cy="28" r="16" fill="none" stroke="currentColor" stroke-width="6"/><path d="M40 40l14 14" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M20 20l16 16M36 20L20 36" stroke="#e05a3a" stroke-width="5" stroke-linecap="round"/></svg>That's not here!</button></div>
     <div class="board" id="board"></div>
     <div class="done" id="done" hidden><p>You found every letter!</p><button class="btn" id="again">New words</button></div>
@@ -230,6 +238,15 @@ function refreshQ() { makeQ(); if (Q_SVG) document.querySelectorAll('#board .lt[
 if (document.fonts && document.fonts.load) document.fonts.load('400 100px "Lexend"').then(refreshQ, refreshQ); else refreshQ();
 makeQ();
 
+// ---------- the "find" strip at the top, like Letter Hunt ----------
+const LOOKING = `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="27" cy="27" r="16" fill="#fdf3dc" stroke="#2a1a14" stroke-width="5"/><path d="M39 39l15 15" stroke="#7a4e25" stroke-width="8" stroke-linecap="round"/><path d="M20 22q6-6 13-3" stroke="#e2702a" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
+function setCue(l, text) {
+  const p = $("tpic"); p.classList.remove("pop"); void p.offsetWidth; p.classList.add("pop");
+  p.innerHTML = l && IMGS ? `<img src="${IMGS[l].ill}" alt="">` : LOOKING;
+  $("cue").innerHTML = text != null ? text : `Find the <b>${NAMES[l]}</b>!`;
+}
+function setStatus(text, cls) { $("status").className = "status" + (cls ? " " + cls : ""); $("status").textContent = text || ""; }
+
 // ---------- game ----------
 let words = [], target = null, lastTarget = null, score = 0, busy = false, phase = "find", askedMissing = false;
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -277,14 +294,14 @@ function nextTarget() {
     // Down to the last letter: first ask for one that is not on the board.
     phase = "missing"; target = missingLetter(left[0]); lastTarget = target;
     $("notHere").hidden = false;
-    $("adult").innerHTML = `Grown-up says: <b>"Find the ${NAMES[target]}."</b> (It's not here. Can they tell?)`;
+    setCue(target); setStatus("Look carefully at every word.");
     return;
   }
   phase = "find"; $("notHere").hidden = true;
   const mine = left.filter(l => opts.letters.includes(l)); const pool = mine.length ? mine : left;
   const choices = pool.length > 1 ? pool.filter(l => l !== lastTarget) : pool;
   target = choices[Math.floor(Math.random() * choices.length)]; lastTarget = target;
-  $("adult").innerHTML = `Grown-up says: <b>"Find the ${NAMES[target]}."</b>`;
+  setCue(target); setStatus("");
 }
 function tap(btn, ch) {
   if (busy || btn.classList.contains("found")) return;
@@ -294,12 +311,12 @@ function tap(btn, ch) {
     // every letter in this word found: turn the card over
     const card = btn.closest(".flipcard");
     if ([...card.querySelectorAll(".lt")].every(b => b.classList.contains("found"))) setTimeout(() => { card.classList.add("flipped"); tone([392, 523, 659, 784], .08, "triangle", .08); }, 700);
-    $("adult").innerHTML = `Yes! That's the ${NAMES[target]}.`;
+    setStatus(`Yes! That's the ${NAMES[target]}.`, "good");
     setTimeout(() => { btn.classList.remove("yes"); nextTarget(); }, 1400);
   } else {
     btn.classList.remove("miss"); void btn.offsetWidth; btn.classList.add("miss"); setTimeout(() => btn.classList.remove("miss"), 900);
     womp(); showOops(btn, ch);
-    $("adult").innerHTML = `That's the ${NAMES[ch] || ch}. Grown-up says: <b>"Find the ${NAMES[target]}."</b>`;
+    setStatus(`That's the ${NAMES[ch] || ch}. Try again!`, "oops");
   }
 }
 $("notHere").onclick = () => {
@@ -307,17 +324,17 @@ $("notHere").onclick = () => {
   if (phase === "missing") {
     busy = true; askedMissing = true; $("board").classList.add("locked");
     tone([523, 659, 784, 1046], .1); score++; dropCandy($("notHere"));
-    $("adult").innerHTML = `Good looking! There's no ${NAMES[target]} here.`;
+    setStatus(`Good looking! There's no ${NAMES[target]} here.`, "good");
     setTimeout(nextTarget, 1700);
   } else {
     const b = $("notHere"); b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad"); womp();
     tiles().filter(t => t.dataset.l === target && !t.classList.contains("found")).forEach(t => t.classList.add("show"));
-    $("adult").innerHTML = `It's here! Look again. Grown-up says: <b>"Find the ${NAMES[target]}."</b>`;
+    setStatus("It's here! Look again.", "oops");
   }
 };
 function finishBoard() {
   $("notHere").hidden = true; target = null;
-  $("adult").innerHTML = "Every letter is found!";
+  setCue(null, "You found every letter!"); setStatus("");
   tone([523, 659, 784, 1046, 1318], .12);
   setTimeout(() => { $("done").hidden = false; }, 600);
 }
