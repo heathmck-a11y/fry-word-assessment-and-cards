@@ -7,13 +7,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500&display=swap">
 <style>
-/* Layout: one-screen night scene. Header, then a strip with the picture called for this turn, then a few big white word cards whose letters are tap targets, then the "Not here!" ghost. Winner overlay on top. Single dark look by choice, to match the other Halloween games. */
+/* Layout: one-screen daytime sky. Header, then a strip with the picture called for this turn and the words the teacher reads aloud, then a few big white word cards whose letters are tap targets, then the "Not here!" button. Winner overlay on top. */
 :root {
   color-scheme: dark;
-  --night: #1d1430;
-  --night-2: #2c1f47;
-  --ink: #f4eefc;
-  --muted: #b9abd3;
+  --night: #2b6cb0;
+  --night-2: #1f5591;
+  --ink: #ffffff;
+  --muted: #d3e6f7;
   --candy: #f28a24;
   --candy-2: #f6c843;
   --word-ink: #14102a;
@@ -25,14 +25,14 @@
 html, body { min-height: 100%; }
 body {
   margin: 0; color: var(--ink); font-family: var(--display); font-weight: 500;
-  background: radial-gradient(1200px 600px at 50% 120%, #3a2760 0, transparent 70%), var(--night);
+  background: linear-gradient(180deg, #2b6cb0 0%, #4a92d6 70%, #6fb0e6 100%) fixed, var(--night);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 12px 24px; overflow-x: hidden;
 }
-.stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.clouds { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 .wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-h1 { font-size: clamp(24px, 6vw, 34px); margin: 0; font-weight: 700; color: var(--candy-2); text-shadow: 0 2px 0 #7a3f0a; }
+h1 { font-size: clamp(24px, 6vw, 34px); margin: 0; font-weight: 700; color: var(--candy-2); text-shadow: 0 2px 0 #1b3f6b; }
 .iconbtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 
@@ -46,12 +46,12 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 .target .cue { font-size: clamp(22px, 5.5vw, 32px); font-weight: 600; margin: 0; }
 .target .cue b { color: var(--candy-2); }
 .status { font-size: clamp(18px, 4.4vw, 24px); margin: 0; min-height: 1.3em; color: var(--muted); }
-.status.good { color: var(--candy-2); } .status.oops { color: #f3a6c0; }
+.status.good { color: var(--candy-2); } .status.oops { color: #ffe1e8; font-weight: 600; }
 
 .board { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(12px, 3vw, 26px); }
 .word { background: #fff; border-radius: 18px; padding: 4px 16px; display: flex; box-shadow: 0 10px 18px -10px rgba(0,0,0,.7); }
 .lt { font-family: var(--letter); font-weight: 400; font-size: clamp(52px, 12vw, 104px); line-height: 1.2; color: var(--word-ink); background: none; border: 0; padding: 0 .015em; margin: 0; min-width: .32em; border-radius: 12px; cursor: pointer; }
-.lt:hover { background: #f1ecf9; }
+.lt:hover { background: #eaf3fb; }
 .lt.found { background: var(--candy-2); animation: pop .4s ease-out; cursor: default; }
 .lt.found:hover { background: var(--candy-2); }
 .lt.last { background: var(--candy); box-shadow: 0 0 0 4px #fff, 0 0 22px 8px rgba(246,200,67,.85); }
@@ -68,17 +68,17 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 .oopspic.below::after { bottom: auto; top: -14px; border-top-color: transparent; border-bottom-color: #f3a6c0; }
 
 .nothere { align-self: center; display: flex; align-items: center; gap: 12px; background: var(--night-2); color: var(--ink); border: 3px dashed var(--muted); border-radius: 22px; padding: 8px 22px 8px 12px; font: inherit; font-size: clamp(22px, 5vw, 30px); font-weight: 600; cursor: pointer; }
-.nothere svg { width: clamp(56px, 12vw, 76px); height: auto; animation: bob 3s ease-in-out infinite; }
+.nothere svg { width: clamp(52px, 10vw, 70px); height: auto; }
 .nothere:hover { border-color: var(--candy-2); }
 .nothere.ok { border-style: solid; border-color: var(--candy-2); color: var(--candy-2); }
-.nothere.bad { animation: shake .45s ease-in-out; border-color: #f3a6c0; }
+.nothere.bad { animation: shake .45s ease-in-out; border-color: #ffb3c4; }
 
-.panel, .intro { background: var(--night-2); border: 2px solid #4b3a6e; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.panel, .intro { background: var(--night-2); border: 2px solid #5b93c9; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .panel h2, .intro h2 { margin: 0; font-size: 22px; font-weight: 600; color: var(--candy-2); }
 .intro ol { margin: 0; padding-left: 1.3em; font-size: 18px; line-height: 1.5; display: flex; flex-direction: column; gap: 6px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .lab { font-size: 15px; color: var(--muted); width: 100%; }
-.chip { font: inherit; font-size: 16px; min-width: 44px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 2px solid #5a4a7e; background: transparent; color: var(--ink); cursor: pointer; }
+.chip { font: inherit; font-size: 16px; min-width: 44px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 2px solid #8fbbe3; background: transparent; color: var(--ink); cursor: pointer; }
 .chip.letter { font-family: var(--letter); font-size: 20px; padding: 4px 0; }
 .chip[aria-pressed="true"] { background: var(--candy); border-color: var(--candy); color: #2a1404; font-weight: 600; }
 .btn { font: inherit; font-weight: 700; font-size: 20px; padding: 12px 26px; border-radius: 16px; border: 0; background: var(--candy); color: #2a1404; cursor: pointer; box-shadow: 0 5px 0 #a3530c; }
@@ -86,9 +86,9 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 .btn.ghosty { background: transparent; color: var(--ink); border: 2px solid var(--muted); box-shadow: none; }
 .note { font-size: 14px; color: var(--muted); margin: 0; }
 
-.win { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(20, 12, 36, .72); padding: 16px; }
+.win { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: rgba(12, 34, 64, .65); padding: 16px; }
 .win .card { background: var(--night-2); border: 3px solid var(--candy-2); border-radius: 24px; padding: 22px 26px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; max-width: 420px; animation: pop .45s ease-out; }
-.win h2 { margin: 0; font-size: clamp(40px, 11vw, 64px); color: var(--candy-2); line-height: 1; text-shadow: 0 3px 0 #7a3f0a; }
+.win h2 { margin: 0; font-size: clamp(40px, 11vw, 64px); color: var(--candy-2); line-height: 1; text-shadow: 0 3px 0 #1b3f6b; }
 .win p { margin: 0; font-size: 20px; }
 .win .row { justify-content: center; }
 .confetti { position: fixed; z-index: 21; top: -40px; width: 30px; height: 30px; pointer-events: none; }
@@ -100,7 +100,7 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .lt.found, .lt.miss, .lt.was, .win .card, .nothere svg, .nothere.bad, .target .pic.swap { animation: none; } }
 </style>
 
-<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+<canvas class="clouds" id="clouds" aria-hidden="true"></canvas>
 <div class="wrap">
   <header>
     <h1>Letter Hunt</h1>
@@ -111,9 +111,9 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
     <h2>How to play</h2>
     <ol>
       <li>Line up in front of the screen.</li>
-      <li>On your turn, listen: "Tap on the snake."</li>
+      <li>On your turn, your teacher reads what to tap: "Tap on the snake."</li>
       <li>If you see that letter in the words, tap it. Then go to the back of the line.</li>
-      <li>If it's not there, tap the ghost that says "Not here!"</li>
+      <li>If it's not there, tap "Not here!"</li>
       <li>Every turn has a new letter. Whoever taps the very last letter wins!</li>
     </ol>
     <div class="row"><button class="btn" id="go">Start</button></div>
@@ -121,7 +121,7 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 
   <section class="panel" id="panel" hidden>
     <h2>Settings</h2>
-    <div class="row"><span class="lab">What the game says</span>
+    <div class="row"><span class="lab">What the screen says (the teacher reads it)</span>
       <button class="chip" id="v-pic">Picture name ("Tap on the snake")</button>
       <button class="chip" id="v-let">Letter name ("Tap on the letter s")</button>
     </div>
@@ -147,7 +147,6 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
   <main id="stage" hidden>
     <div class="target">
       <div class="pic" id="pic"><img id="targetImg" alt="">
-        <button class="say" id="sayBtn" aria-label="Hear it again" title="Hear it again"><svg width="22" height="22" viewBox="0 0 24 24" fill="#2a1a33" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#2a1a33" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
       </div>
       <div class="words">
         <p class="cue" id="cue"></p>
@@ -155,7 +154,7 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
       </div>
     </div>
     <div class="board" id="board"></div>
-    <button class="nothere" id="notHere"><svg viewBox="0 0 120 140" aria-hidden="true"><path d="M10 128V58a50 50 0 0 1 100 0v70c-6 0-8-10-15-10s-9 10-15 10-9-10-15-10-9 10-15 10-9-10-15-10-9 10-15 10-9-10-15-10z" fill="#fff" stroke="#2a1a33" stroke-width="4" stroke-linejoin="round"/><circle cx="44" cy="44" r="6" fill="#2a1a33"/><circle cx="76" cy="44" r="6" fill="#2a1a33"/><ellipse cx="60" cy="72" rx="8" ry="10" fill="#2a1a33"/></svg>Not here!</button>
+    <button class="nothere" id="notHere"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="28" cy="28" r="17" fill="#fff" stroke="#14102a" stroke-width="5"/><path d="M40 40l14 14" stroke="#f6c843" stroke-width="8" stroke-linecap="round"/><path d="M21 21l14 14M35 21L21 35" stroke="#e05a3a" stroke-width="5" stroke-linecap="round"/></svg>Not here!</button>
   </main>
 </div>
 
@@ -169,7 +168,7 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 
 <script>
 const IMGS = null;   // public version: no Sunform pictures
-const LOOKING = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="27" cy="27" r="16" fill="#fdf3dc" stroke="#2a1a33" stroke-width="5"/><path d="M39 39l15 15" stroke="#6b4a8a" stroke-width="8" stroke-linecap="round"/><path d="M20 22q6-6 13-3" stroke="#f28a24" stroke-width="3" fill="none" stroke-linecap="round"/></svg>');
+const LOOKING = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="27" cy="27" r="16" fill="#eaf3fb" stroke="#14102a" stroke-width="5"/><path d="M39 39l15 15" stroke="#2b6cb0" stroke-width="8" stroke-linecap="round"/><path d="M20 22q6-6 13-3" stroke="#f28a24" stroke-width="3" fill="none" stroke-linecap="round"/></svg>');
 const NAMES = { a:"apple", b:"bat and ball", c:"cat", d:"dog", e:"echoing explorer", f:"funny fish", g:"goofy glasses", h:"highchair", i:"inchworm", j:"jumper", k:"kicker", l:"long legs", m:"mountain man", n:"newt", o:"octopus", p:"plumbing pipe", q:"queen", r:"railroad", s:"snake", t:"tall tower", u:"upside down umbrella", v:"v-neck vest", w:"wild wave", y:"yellow yarn", z:"zig zag" };
 const LOOK = { a:"odgqce", b:"dpqh", c:"oea", d:"bqap", e:"coa", f:"tl", g:"qyap", h:"nkb", i:"jlt", j:"iyg", k:"h", l:"it", m:"nw", n:"uhmr", o:"cae", p:"qbdg", q:"pgdb", r:"n", s:"z", t:"fl", u:"nvy", v:"wyu", w:"mv", y:"vgj", z:"s" };
 // Short words with no x (x has no picture name, so it could never be called).
@@ -199,13 +198,18 @@ let opts = Object.assign({ voice: "pic", style: "full", nWords: 3, mine: true, p
 opts.letters = opts.letters.filter(l => NAMES[l]);
 let cur = null, last = null, over = false, busy = false, pool = [], usedMine = true;
 
-// ---------- stars ----------
-(function stars() {
-  const cv = $("stars"), g = cv.getContext("2d");
+// ---------- clouds ----------
+(function clouds() {
+  const cv = $("clouds"), g = cv.getContext("2d");
   function draw() {
     cv.width = innerWidth; cv.height = innerHeight; g.clearRect(0, 0, cv.width, cv.height);
-    let seed = 31; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    for (let i = 0; i < 90; i++) { g.fillStyle = `rgba(255,248,220,${0.25 + rnd()*0.6})`; g.beginPath(); g.arc(rnd()*cv.width, rnd()*cv.height*0.7, rnd()*1.6 + .3, 0, 7); g.fill(); }
+    let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const n = Math.max(4, Math.round(cv.width / 220));
+    for (let i = 0; i < n; i++) {
+      const x = (i + rnd() * .8) * cv.width / n, y = 40 + rnd() * cv.height * .85, s = 26 + rnd() * 26;
+      g.fillStyle = `rgba(255,255,255,${0.10 + rnd() * 0.10})`;
+      [[0, 0, 1], [-1.1, .35, .7], [1.1, .35, .75], [-.4, .5, .8], [.5, .55, .8]].forEach(([dx, dy, r]) => { g.beginPath(); g.arc(x + dx * s, y + dy * s, r * s, 0, 7); g.fill(); });
+    }
   }
   draw(); addEventListener("resize", draw);
 })();
@@ -230,12 +234,35 @@ function womp() {
     });
   } catch (e) {}
 }
-function say(text, delay = 0) {
-  if (!("speechSynthesis" in window)) return;
-  setTimeout(() => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.rate = .85; u.pitch = 1.1; speechSynthesis.speak(u); } catch (e) {} }, delay);
-}
+// No computer voice: the teacher reads the words on the screen.
+function say() {}
 const label = (l) => opts.voice === "let" ? `the letter ${l}` : `the ${NAMES[l]}`;
 const plain = (l) => opts.voice === "let" ? l : NAMES[l];
+
+// ---------- a q with a curled tail, like the Sunform q ----------
+// Measured from the page font so it sits on the same baseline and size as the other letters.
+let Q_SVG = null;
+function makeQ() {
+  try {
+    const c = document.createElement("canvas").getContext("2d");
+    c.font = '400 100px Lexend, "Century Gothic", sans-serif';
+    const mq = c.measureText("q"), ml = c.measureText("l"), mo = c.measureText("o");
+    const xh = mo.actualBoundingBoxAscent, desc = mq.actualBoundingBoxDescent;
+    const left = -mq.actualBoundingBoxLeft, right = mq.actualBoundingBoxRight;
+    const sw = ml.actualBoundingBoxLeft + ml.actualBoundingBoxRight;
+    if (!(xh > 0 && desc > 0 && sw > 0)) return;
+    const stemX = right - sw / 2, bowlL = left + sw / 2;
+    const cx = (bowlL + stemX) / 2, rx = (stemX - bowlL) / 2, ry = (xh - sw) / 2, cy = -xh / 2;
+    const bend = desc * .62, hook = desc * .5, bottom = desc - sw / 2;
+    const w = Math.max(mq.width, stemX + hook + sw), top = xh + sw, h = top + desc + sw / 2;
+    Q_SVG = `<svg viewBox="0 ${-top} ${w} ${h}" style="height:${h / 100}em;width:${w / 100}em;vertical-align:${-(desc + sw / 2) / 100}em;overflow:visible" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round">` +
+      `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>` +
+      `<path d="M${stemX} ${-xh + sw / 2} L${stemX} ${bend} Q${stemX} ${bottom} ${stemX + hook / 2} ${bottom} Q${stemX + hook} ${bottom} ${stemX + hook} ${bend + (bottom - bend) * .1}"/></svg>`;
+  } catch (e) { Q_SVG = null; }
+}
+function refreshQ() { makeQ(); if (Q_SVG) document.querySelectorAll('#board .lt[data-l="q"], #letters [data-l="q"]').forEach(b => { b.innerHTML = Q_SVG; }); }
+if (document.fonts && document.fonts.load) document.fonts.load('400 100px "Lexend"').then(refreshQ, refreshQ); else refreshQ();
+makeQ();
 
 // ---------- board ----------
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -254,7 +281,7 @@ function pickWords() {
   return best.ws;
 }
 const remaining = () => [...document.querySelectorAll(".lt:not(.found)")];
-const remainingLetters = () => [...new Set(remaining().map(b => b.textContent))];
+const remainingLetters = () => [...new Set(remaining().map(b => b.dataset.l))];
 
 // Each turn: usually a letter that is still on the screen; sometimes one that isn't, picked from look-alikes when possible.
 function nextCall() {
@@ -302,7 +329,7 @@ function tapLetter(btn, ch) {
 }
 function tapNotHere() {
   if (over || busy) return;
-  const there = remaining().filter(b => b.textContent === cur);
+  const there = remaining().filter(b => b.dataset.l === cur);
   if (!there.length) {
     $("notHere").classList.add("ok"); tone([523, 659, 784], .09); say("Good looking! It's not there.", 150);
     nextTurn("Good looking! It's not there.", "good", 2600);
@@ -319,7 +346,7 @@ function showOops(btn, ch) {
   document.querySelectorAll(".oopspic").forEach(e => e.remove());
   const box = document.createElement("div"); box.className = "oopspic";
   box.classList.add("words");
-  const s = document.createElement("span"); s.textContent = ch;
+  const s = document.createElement("span"); if (ch === "q" && Q_SVG) s.innerHTML = Q_SVG; else s.textContent = ch;
   const n = document.createElement("small"); n.textContent = NAMES[ch];
   box.append(s, n); document.body.appendChild(box);
   const r = btn.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
@@ -332,8 +359,8 @@ function showOops(btn, ch) {
 }
 
 // ---------- winning ----------
-const CANDIES = ["#f28a24", "#f6c843", "#c86bd8", "#7fd18b", "#ef5a6f"];
-function candySVG(col) { return `<svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><path d="M6 20l-5-6v12zM34 20l5-6v12z" fill="${col}" stroke="#2a1a33" stroke-width="2"/><ellipse cx="20" cy="20" rx="14" ry="10" fill="${col}" stroke="#2a1a33" stroke-width="2.5"/><path d="M12 15q8 10 16 0" stroke="#fff" stroke-width="2" fill="none" opacity=".6"/></svg>`; }
+const CONFETTI = ["#f28a24", "#f6c843", "#ffffff", "#7fd18b", "#ef5a6f", "#9ad0ff"];
+function confettiSVG(col, k) { return k % 2 ? `<svg viewBox="0 0 40 40" width="26" height="26" aria-hidden="true"><path d="M20 3l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="${col}" stroke="#1b3f6b" stroke-width="2" stroke-linejoin="round"/></svg>` : `<svg viewBox="0 0 40 40" width="22" height="22" aria-hidden="true"><rect x="10" y="4" width="20" height="32" rx="3" fill="${col}" stroke="#1b3f6b" stroke-width="2"/></svg>`; }
 function celebrate() {
   tone([523, 659, 784, 1046, 1318], .13);
   $("status").className = "status good"; $("status").textContent = "That was the last letter!";
@@ -343,7 +370,7 @@ function celebrate() {
     $("win").hidden = false;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     for (let i = 0; i < 40; i++) {
-      const c = document.createElement("div"); c.className = "confetti"; c.innerHTML = candySVG(CANDIES[i % CANDIES.length]);
+      const c = document.createElement("div"); c.className = "confetti"; c.innerHTML = confettiSVG(CONFETTI[i % CONFETTI.length], i);
       c.style.left = Math.random() * 100 + "vw"; document.body.appendChild(c);
       const a = c.animate([{ transform: "translateY(0) rotate(0)" }, { transform: `translateY(${innerHeight + 80}px) rotate(${Math.random() * 720 - 360}deg)` }],
         { duration: 1800 + Math.random() * 1600, delay: Math.random() * 900, easing: "cubic-bezier(.3,.1,.6,1)", fill: "forwards" });
@@ -361,7 +388,7 @@ function newGame() {
   pool = [...new Set(opts.letters.concat(onBoard))].filter(l => NAMES[l]);
   $("board").replaceChildren(...words.map(w => {
     const card = document.createElement("div"); card.className = "word";
-    for (const ch of w) { const b = document.createElement("button"); b.className = "lt"; b.textContent = ch; b.setAttribute("aria-label", "letter " + ch); b.onclick = () => tapLetter(b, ch); card.appendChild(b); }
+    for (const ch of w) { const b = document.createElement("button"); b.className = "lt"; if (ch === "q" && Q_SVG) b.innerHTML = Q_SVG; else b.textContent = ch; b.dataset.l = ch; b.setAttribute("aria-label", "letter " + ch); b.onclick = () => tapLetter(b, ch); card.appendChild(b); }
     return card;
   }));
   $("status").className = "status"; $("status").textContent = "First person, go!";
@@ -374,7 +401,6 @@ function start() {
   newGame();
 }
 $("againBtn").onclick = newGame;
-$("sayBtn").onclick = () => cur && !over && say(`Tap on ${label(cur)}.`);
 
 // ---------- settings ----------
 function syncPanel() {
@@ -390,7 +416,7 @@ function syncPanel() {
   $("panelNote").textContent = note;
   $("startBtn").disabled = n < 5;
 }
-$("letters").replaceChildren(...ALL.map(l => { const b = document.createElement("button"); b.className = "chip letter"; b.textContent = l; b.dataset.l = l;
+$("letters").replaceChildren(...ALL.map(l => { const b = document.createElement("button"); b.className = "chip letter"; if (l === "q" && Q_SVG) b.innerHTML = Q_SVG; else b.textContent = l; b.dataset.l = l;
   b.onclick = () => { opts.letters = opts.letters.includes(l) ? opts.letters.filter(x => x !== l) : ALL.filter(x => x === l || opts.letters.includes(x)); syncPanel(); }; return b; }));
 $("v-pic").onclick = () => { opts.voice = "pic"; syncPanel(); }; $("v-let").onclick = () => { opts.voice = "let"; syncPanel(); };
 $("s-full").onclick = () => { opts.style = "full"; syncPanel(); }; $("s-clue").onclick = () => { opts.style = "clue"; syncPanel(); };

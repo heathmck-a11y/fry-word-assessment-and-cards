@@ -65,7 +65,7 @@ To change a word, edit the `FRY` list near the top of the script in `index.html`
 
 ## Letter Hunt (game)
 
-A small-group letter game: a grown-up reads "Tap on the tall tower," and kids take turns tapping that letter in a few short words. Each turn calls a new letter. Sometimes the letter isn't in any word, and kids tap "Not here!"
+A small-group letter game: the screen shows "Tap on the tall tower," the teacher reads it aloud, and kids take turns tapping that letter in a few short words. Each turn calls a new letter. Sometimes the letter isn't in any word, and kids tap "Not here!"
 
 **Play it here:** https://heathmck-a11y.github.io/fry-word-assessment-and-cards/letter-hunt/
 
