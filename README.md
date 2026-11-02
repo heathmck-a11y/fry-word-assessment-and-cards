@@ -67,6 +67,8 @@ To change a word, edit the `FRY` list near the top of the script in `index.html`
 
 A small-group letter game: the screen shows "Tap on the tall tower," the teacher reads it aloud, and kids take turns tapping that letter in a few short words. Each turn calls a new letter. Sometimes the letter isn't in any word, and kids tap "Not here!"
 
+In Settings, choose how to win: tap the last letter, grow a caterpillar to the leaf (every right answer adds a piece), or a 1-minute challenge that keeps a best score on that device. "How often the letter is not there" can be set to Never, so every letter called is on the screen.
+
 **Play it here:** https://heathmck-a11y.github.io/fry-word-assessment-and-cards/letter-hunt/
 
 It's one file, `letter-hunt/index.html`, with no sign-in. This public version shows the letter and its picture name in words after a wrong tap; it does not include any Sunform pictures.

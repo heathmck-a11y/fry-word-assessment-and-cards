@@ -73,6 +73,19 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
 .nothere.ok { border-style: solid; border-color: var(--candy-2); color: var(--candy-2); }
 .nothere.bad { animation: shake .45s ease-in-out; border-color: #ffb3c4; }
 
+/* Progress strip under the words: a caterpillar that grows toward a leaf, or a 1-minute timer. */
+.track { position: relative; height: clamp(70px, 15vh, 120px); margin-top: 6px; }
+.track svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.track .count { position: absolute; left: 0; top: -6px; font-size: 18px; color: var(--muted); }
+.timer { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.timer .bar { width: min(100%, 720px); height: 22px; border-radius: 999px; background: rgba(255,255,255,.22); overflow: hidden; border: 2px solid rgba(255,255,255,.5); }
+.timer .fill { height: 100%; width: 100%; background: var(--candy-2); border-radius: 999px; transition: width .25s linear; }
+.timer .fill.low { background: var(--candy); }
+.timer .nums { display: flex; gap: 22px; font-size: clamp(20px, 4.6vw, 26px); font-weight: 600; }
+.timer .nums b { color: var(--candy-2); }
+.ready { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; background: rgba(12, 34, 64, .45); border-radius: 18px; }
+.ready .btn { font-size: clamp(24px, 5vw, 32px); padding: 16px 34px; }
+#stage { position: relative; }
 .panel, .intro { background: var(--night-2); border: 2px solid #5b93c9; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .panel h2, .intro h2 { margin: 0; font-size: 22px; font-weight: 600; color: var(--candy-2); }
 .intro ol { margin: 0; padding-left: 1.3em; font-size: 18px; line-height: 1.5; display: flex; flex-direction: column; gap: 6px; }
@@ -113,14 +126,25 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
       <li>Line up in front of the screen.</li>
       <li>On your turn, your teacher reads what to tap: "Tap on the snake."</li>
       <li>If you see that letter in the words, tap it. Then go to the back of the line.</li>
-      <li>If it's not there, tap "Not here!"</li>
-      <li>Every turn has a new letter. Whoever taps the very last letter wins!</li>
+      <li id="introNot">If it's not there, tap "Not here!"</li>
+      <li id="introWin"></li>
     </ol>
     <div class="row"><button class="btn" id="go">Start</button></div>
   </section>
 
   <section class="panel" id="panel" hidden>
     <h2>Settings</h2>
+    <div class="row"><span class="lab">How to win</span>
+      <button class="chip" id="g-last">Tap the last letter</button>
+      <button class="chip" id="g-grow">Grow the caterpillar</button>
+      <button class="chip" id="g-time">1-minute challenge</button>
+    </div>
+    <div class="row" id="growRow"><span class="lab">How long the caterpillar has to grow</span>
+      <button class="chip" data-g="15">15 letters</button><button class="chip" data-g="25">25 letters</button><button class="chip" data-g="40">40 letters</button>
+    </div>
+    <div class="row" id="timeRow"><span class="lab">1-minute best score on this device: <b id="bestNote"></b></span>
+      <button class="chip" id="resetBest">Clear best score</button>
+    </div>
     <div class="row"><span class="lab">What the screen says (the teacher reads it)</span>
       <button class="chip" id="v-pic">Picture name ("Tap on the snake")</button>
       <button class="chip" id="v-let">Letter name ("Tap on the letter s")</button>
@@ -130,14 +154,14 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
       <button class="chip" id="s-clue">Clue picture</button>
     </div>
     <div class="row"><span class="lab">Words on the screen</span>
-      <button class="chip" data-n="2">2 (short game)</button><button class="chip" data-n="3">3</button><button class="chip" data-n="4">4 (long game)</button>
+      <button class="chip" data-n="2">2</button><button class="chip" data-n="3">3</button><button class="chip" data-n="4">4</button>
     </div>
     <div class="row"><span class="lab">Which words</span>
       <button class="chip" id="w-mine">Only words made of my letters</button>
       <button class="chip" id="w-any">Any short words</button>
     </div>
     <div class="row"><span class="lab">How often the letter is not there</span>
-      <button class="chip" data-p="0.2">Sometimes</button><button class="chip" data-p="0.35">Often</button>
+      <button class="chip" data-p="0">Never (the letter is always there)</button><button class="chip" data-p="0.2">Sometimes</button><button class="chip" data-p="0.35">Often</button>
     </div>
     <div class="row"><span class="lab">My letters (pick at least 5)</span><div class="row" id="letters"></div></div>
     <p class="note" id="panelNote"></p>
@@ -154,7 +178,10 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
       </div>
     </div>
     <div class="board" id="board"></div>
+    <div class="timer" id="timer" hidden><div class="bar"><div class="fill" id="timeFill"></div></div><div class="nums"><span>Letters: <b id="timeScore">0</b></span><span>Best: <b id="timeBest">0</b></span></div></div>
     <button class="nothere" id="notHere"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="28" cy="28" r="17" fill="#fff" stroke="#14102a" stroke-width="5"/><path d="M40 40l14 14" stroke="#f6c843" stroke-width="8" stroke-linecap="round"/><path d="M21 21l14 14M35 21L21 35" stroke="#e05a3a" stroke-width="5" stroke-linecap="round"/></svg>Not here!</button>
+    <div class="track" id="track" hidden><svg id="trackSvg" aria-hidden="true"></svg><span class="count" id="growCount"></span></div>
+    <div class="ready" id="ready" hidden><button class="btn" id="timeGo">Start the minute</button></div>
   </main>
 </div>
 
@@ -194,7 +221,9 @@ const DEFAULT = ["n","w","y","z","j","v","k","r","o","a","p","d","t","e"];
 const $ = id => document.getElementById(id);
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
                 set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
-let opts = Object.assign({ voice: "pic", style: "full", nWords: 3, mine: true, pNot: 0.2, letters: DEFAULT }, store.get("letterHunt2Opts", {}));
+let opts = Object.assign({ goal: "last", growLen: 25, voice: "pic", style: "full", nWords: 3, mine: true, pNot: 0.2, letters: DEFAULT }, store.get("letterHunt2Opts", {}));
+let best = store.get("letterHunt2Best", 0);
+let grown = 0, score = 0, timeLeft = 0, timerId = null;
 opts.letters = opts.letters.filter(l => NAMES[l]);
 let cur = null, last = null, over = false, busy = false, pool = [], usedMine = true;
 
@@ -289,7 +318,7 @@ function nextCall() {
   const availAll = remainingLetters();
   const absent = pool.filter(l => !availAll.includes(l) && l !== last);
   let l;
-  if (absent.length && (Math.random() < opts.pNot || !avail.length)) {
+  if (opts.pNot > 0 && absent.length && (Math.random() < opts.pNot || !avail.length)) {
     const near = absent.filter(a => availAll.some(r => LOOK[r].includes(a)));
     const from = near.length && Math.random() < .65 ? near : absent;
     l = from[Math.floor(Math.random() * from.length)];
@@ -308,10 +337,23 @@ function call() {
   $("stage").classList.remove("locked");
   say(`Tap on ${label(cur)}.`, 250);
 }
+// Shorter pauses in the 1-minute challenge, so the clock is spent finding letters.
+const wait = (ms) => opts.goal === "time" ? Math.round(ms * .45) : ms;
 function nextTurn(msg, cls, delay) {
   $("status").className = "status " + cls; $("status").textContent = msg;
   busy = true; $("stage").classList.add("locked");
-  setTimeout(() => { $("status").className = "status"; $("status").textContent = "Next person!"; call(); }, delay);
+  setTimeout(() => {
+    if (over) return;
+    $("status").className = "status"; $("status").textContent = opts.goal === "time" ? "Keep going!" : "Next person!";
+    if (!remaining().length) newBoard();   // all letters found: new words (caterpillar and 1-minute games)
+    call();
+  }, wait(delay));
+}
+// A right answer: a letter found, or a correct "Not here!"
+function scorePoint() {
+  if (opts.goal === "grow") { grown++; drawTrack(true); if (grown >= opts.growLen) { over = true; $("stage").classList.add("locked"); celebrate(); return true; } }
+  if (opts.goal === "time") { score++; $("timeScore").textContent = score; }
+  return false;
 }
 function tapLetter(btn, ch) {
   if (over || busy || btn.classList.contains("found")) return;
@@ -323,7 +365,8 @@ function tapLetter(btn, ch) {
     return;
   }
   btn.classList.add("found");
-  if (!remaining().length) { over = true; btn.classList.add("last"); $("stage").classList.add("locked"); celebrate(); return; }
+  if (opts.goal === "last" && !remaining().length) { over = true; btn.classList.add("last"); $("stage").classList.add("locked"); celebrate(); return; }
+  if (scorePoint()) return;
   tone([523, 659, 784], .09); say(plain(cur) + "!", 150);
   nextTurn("You found it!", "good", 1900);
 }
@@ -331,7 +374,7 @@ function tapNotHere() {
   if (over || busy) return;
   const there = remaining().filter(b => b.dataset.l === cur);
   if (!there.length) {
-    $("notHere").classList.add("ok"); tone([523, 659, 784], .09); say("Good looking! It's not there.", 150);
+    $("notHere").classList.add("ok"); if (scorePoint()) return; tone([523, 659, 784], .09); say("Good looking! It's not there.", 150);
     nextTurn("Good looking! It's not there.", "good", 2600);
   } else {
     const nh = $("notHere"); nh.classList.remove("bad"); void nh.offsetWidth; nh.classList.add("bad");
@@ -363,10 +406,17 @@ const CONFETTI = ["#f28a24", "#f6c843", "#ffffff", "#7fd18b", "#ef5a6f", "#9ad0f
 function confettiSVG(col, k) { return k % 2 ? `<svg viewBox="0 0 40 40" width="26" height="26" aria-hidden="true"><path d="M20 3l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="${col}" stroke="#1b3f6b" stroke-width="2" stroke-linejoin="round"/></svg>` : `<svg viewBox="0 0 40 40" width="22" height="22" aria-hidden="true"><rect x="10" y="4" width="20" height="32" rx="3" fill="${col}" stroke="#1b3f6b" stroke-width="2"/></svg>`; }
 function celebrate() {
   tone([523, 659, 784, 1046, 1318], .13);
-  $("status").className = "status good"; $("status").textContent = "That was the last letter!";
-  say("That was the last letter! You win!", 400);
+  const msg = { last: ["Winner!", "You tapped the last letter!", "That was the last letter!"],
+                grow: ["You did it!", "The caterpillar reached the leaf!", "The caterpillar made it!"] }[opts.goal] || ["Time!", "", ""];
+  if (opts.goal === "time") {
+    const isBest = score > best; if (isBest) { best = score; store.set("letterHunt2Best", best); }
+    msg[1] = `You found ${score} letter${score === 1 ? "" : "s"} in 1 minute.` + (isBest && score ? " New best score!" : ` Best: ${best}.`);
+    msg[2] = "Time is up!";
+  }
+  $("status").className = "status good"; $("status").textContent = msg[2];
   setTimeout(() => {
-    $("winText").textContent = "You tapped the last letter!";
+    $("win").querySelector("h2").textContent = msg[0];
+    $("winText").textContent = msg[1];
     $("win").hidden = false;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     for (let i = 0; i < 40; i++) {
@@ -379,9 +429,49 @@ function celebrate() {
   }, 1400);
 }
 
+// ---------- caterpillar ----------
+function drawTrack(bump) {
+  const box = $("track"), W = box.clientWidth, H = box.clientHeight;
+  if (!W) return;
+  const left = 30, leafX = W - 46, y = H * .62;
+  const step = (leafX - left - 40) / opts.growLen, r = Math.min(H * .26, Math.max(10, step * .78));
+  let s = `<path d="M${left - 20} ${y + r + 2} H${W}" stroke="rgba(255,255,255,.45)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 12"/>`;
+  // the leaf at the end
+  s += `<g transform="translate(${leafX} ${y - 4})"><path d="M-26 6 Q-10 -30 30 -22 Q22 18 -26 6z" fill="#7fd18b" stroke="#1b3f6b" stroke-width="3" stroke-linejoin="round"/><path d="M-22 4 Q4 -10 26 -20" stroke="#1b3f6b" stroke-width="2.4" fill="none"/></g>`;
+  const segs = Math.min(grown, opts.growLen);
+  for (let i = 0; i < segs; i++) {
+    const x = left + i * step, yy = y + (i % 2 ? -r * .12 : 0);
+    s += `<circle cx="${x}" cy="${yy}" r="${r}" fill="${i % 2 ? "#8fd16a" : "#6fbf4a"}" stroke="#1b3f6b" stroke-width="2.5"/>`;
+    s += `<path d="M${x - r * .35} ${yy + r * .92} v${r * .35}M${x + r * .35} ${yy + r * .92} v${r * .35}" stroke="#1b3f6b" stroke-width="2.5" stroke-linecap="round"/>`;
+  }
+  const hx = left + segs * step, hr = Math.max(r * 1.15, 12), hy = y - hr * .15;
+  s += `<g${bump ? ' style="transform-box:fill-box;transform-origin:center;animation:pop .4s ease-out"' : ""}>` +
+       `<path d="M${hx - hr * .3} ${hy - hr * .8} q-${hr * .2} -${hr * .7} -${hr * .55} -${hr * .8}M${hx + hr * .3} ${hy - hr * .8} q${hr * .2} -${hr * .7} ${hr * .55} -${hr * .8}" stroke="#1b3f6b" stroke-width="2.5" fill="none" stroke-linecap="round"/>` +
+       `<circle cx="${hx}" cy="${hy}" r="${hr}" fill="#f6c843" stroke="#1b3f6b" stroke-width="3"/>` +
+       `<circle cx="${hx - hr * .32}" cy="${hy - hr * .18}" r="${hr * .16}" fill="#1b3f6b"/><circle cx="${hx + hr * .32}" cy="${hy - hr * .18}" r="${hr * .16}" fill="#1b3f6b"/>` +
+       `<path d="M${hx - hr * .35} ${hy + hr * .3} q${hr * .35} ${hr * .32} ${hr * .7} 0" stroke="#1b3f6b" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>`;
+  $("trackSvg").setAttribute("viewBox", `0 0 ${W} ${H}`); $("trackSvg").innerHTML = s;
+  $("growCount").textContent = `${segs} of ${opts.growLen}`;
+}
+addEventListener("resize", () => { if (opts.goal === "grow" && !$("stage").hidden) drawTrack(false); });
+
+// ---------- 1-minute timer ----------
+function stopTimer() { clearInterval(timerId); timerId = null; }
+function startMinute() {
+  $("ready").hidden = true; score = 0; $("timeScore").textContent = 0;
+  const end = Date.now() + 60000; timeLeft = 60;
+  stopTimer();
+  timerId = setInterval(() => {
+    timeLeft = Math.max(0, (end - Date.now()) / 1000);
+    $("timeFill").style.width = (timeLeft / 60 * 100) + "%"; $("timeFill").classList.toggle("low", timeLeft < 10);
+    if (timeLeft <= 0) { stopTimer(); over = true; $("stage").classList.add("locked"); document.querySelectorAll(".oopspic").forEach(e => e.remove()); celebrate(); }
+  }, 200);
+  $("stage").classList.remove("locked"); call();
+}
+$("timeGo").onclick = startMinute;
+
 // ---------- flow ----------
-function newGame() {
-  over = false; last = null; $("win").hidden = true;
+function newBoard() {
   const words = pickWords();
   const onBoard = [...new Set(words.join(""))];
   // Letters that can be called: my letters plus anything on the screen.
@@ -391,6 +481,21 @@ function newGame() {
     for (const ch of w) { const b = document.createElement("button"); b.className = "lt"; if (ch === "q" && Q_SVG) b.innerHTML = Q_SVG; else b.textContent = ch; b.dataset.l = ch; b.setAttribute("aria-label", "letter " + ch); b.onclick = () => tapLetter(b, ch); card.appendChild(b); }
     return card;
   }));
+}
+function newGame() {
+  over = false; last = null; busy = false; $("win").hidden = true; stopTimer();
+  newBoard();
+  grown = 0; score = 0;
+  $("track").hidden = opts.goal !== "grow"; $("timer").hidden = opts.goal !== "time";
+  $("notHere").hidden = opts.pNot === 0;
+  if (opts.goal === "grow") drawTrack(false);
+  if (opts.goal === "time") {
+    $("timeBest").textContent = best; $("timeScore").textContent = 0; $("timeFill").style.width = "100%"; $("timeFill").classList.remove("low");
+    $("status").className = "status"; $("status").textContent = "Find as many letters as you can!";
+    $("cue").textContent = "Ready?"; $("targetImg").removeAttribute("src");
+    $("ready").hidden = false; $("stage").classList.add("locked"); return;
+  }
+  $("ready").hidden = true;
   $("status").className = "status"; $("status").textContent = "First person, go!";
   call();
 }
@@ -404,6 +509,9 @@ $("againBtn").onclick = newGame;
 
 // ---------- settings ----------
 function syncPanel() {
+  for (const g of ["last", "grow", "time"]) $("g-" + g).setAttribute("aria-pressed", opts.goal === g);
+  $("growRow").hidden = opts.goal !== "grow"; $("timeRow").hidden = opts.goal !== "time"; $("bestNote").textContent = best;
+  document.querySelectorAll("[data-g]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.g === opts.growLen));
   $("v-pic").setAttribute("aria-pressed", opts.voice === "pic"); $("v-let").setAttribute("aria-pressed", opts.voice === "let");
   $("s-full").setAttribute("aria-pressed", opts.style === "full"); $("s-clue").setAttribute("aria-pressed", opts.style === "clue");
   $("w-mine").setAttribute("aria-pressed", opts.mine); $("w-any").setAttribute("aria-pressed", !opts.mine);
@@ -420,10 +528,20 @@ $("letters").replaceChildren(...ALL.map(l => { const b = document.createElement(
   b.onclick = () => { opts.letters = opts.letters.includes(l) ? opts.letters.filter(x => x !== l) : ALL.filter(x => x === l || opts.letters.includes(x)); syncPanel(); }; return b; }));
 $("v-pic").onclick = () => { opts.voice = "pic"; syncPanel(); }; $("v-let").onclick = () => { opts.voice = "let"; syncPanel(); };
 $("s-full").onclick = () => { opts.style = "full"; syncPanel(); }; $("s-clue").onclick = () => { opts.style = "clue"; syncPanel(); };
+for (const g of ["last", "grow", "time"]) $("g-" + g).onclick = () => { opts.goal = g; syncPanel(); syncIntro(); };
+document.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { opts.growLen = +b.dataset.g; syncPanel(); });
+$("resetBest").onclick = () => { best = 0; store.set("letterHunt2Best", 0); syncPanel(); };
+function syncIntro() {
+  $("introWin").textContent = { last: "Every turn has a new letter. Whoever taps the very last letter wins!",
+    grow: `Every letter you find makes the caterpillar grow. Help it reach the leaf!`,
+    time: "Find as many letters as you can in 1 minute. Try to beat your best score!" }[opts.goal];
+  $("introNot").hidden = opts.pNot === 0;
+}
+syncIntro();
 $("w-mine").onclick = () => { opts.mine = true; syncPanel(); }; $("w-any").onclick = () => { opts.mine = false; syncPanel(); };
 document.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { opts.nWords = +b.dataset.n; syncPanel(); });
-document.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { opts.pNot = +b.dataset.p; syncPanel(); });
-function openPanel() { syncPanel(); $("panel").hidden = false; $("intro").hidden = true; $("stage").hidden = true; $("win").hidden = true; }
+document.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { opts.pNot = +b.dataset.p; syncPanel(); syncIntro(); });
+function openPanel() { stopTimer(); syncPanel(); $("panel").hidden = false; $("intro").hidden = true; $("stage").hidden = true; $("win").hidden = true; }
 $("gear").onclick = () => $("panel").hidden ? openPanel() : start();
 $("go").onclick = start; $("startBtn").onclick = start;
 </script>
