@@ -62,3 +62,11 @@ To change a word, edit the `FRY` list near the top of the script in `index.html`
 
 - `index.html`: the whole app.
 - `config.js`: the Google Client ID setting.
+
+## Fall Words (game)
+
+A small-group letter game: a grown-up says "Find the tall tower," and kids tap that letter in a few fall words. Found letters stay gold, finished word cards flip over, and the last turn asks for a letter that isn't there ("That's not here!").
+
+**Play it here:** https://heathmck-a11y.github.io/fry-word-assessment-and-cards/fall-words/
+
+It's one file, `fall-words/index.html`, with no sign-in and nothing saved. This public version shows the letter and its picture name in words after a wrong tap; it does not include any Sunform pictures.

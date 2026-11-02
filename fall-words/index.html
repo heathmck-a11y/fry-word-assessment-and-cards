@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fall Words</title>
+</head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Lexend:wght@400;500&display=swap">
+<style>
+/* Layout: one screen. Header with an acorn count, a small line for the grown-up, then a few fall words on white cards, each with a small picture. Every letter is a tap target; found letters stay gold. Single dark autumn look by choice. */
+:root {
+  color-scheme: dark;
+  --night: #2a1c14;
+  --night-2: #3d2a1e;
+  --ink: #f4eefc;
+  --muted: #d8c4a8;
+  --candy: #f28a24;
+  --candy-2: #f6c843;
+  --word-ink: #14102a;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --letter: "Lexend", "Century Gothic", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--display); font-weight: 500;
+  background: radial-gradient(1200px 600px at 50% 120%, #5a3a1e 0, transparent 70%), var(--night);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 24px; overflow-x: hidden;
+}
+.stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.wrap { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+h1 { font-size: clamp(24px, 6vw, 34px); margin: 0; font-weight: 700; color: var(--candy-2); text-shadow: 0 2px 0 #7a3f0a; }
+.hbtns { display: flex; align-items: center; gap: 10px; }
+.bucket { display: flex; align-items: center; gap: 6px; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.iconbtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
+
+.adultbar { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; min-height: 40px; }
+.adult { font-size: 16px; color: var(--muted); text-align: center; margin: 0; }
+.adult b { color: var(--ink); font-weight: 600; }
+.small { font: inherit; font-size: 14px; color: var(--muted); background: transparent; border: 1.5px solid #5a4a7e; border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+
+.board { display: flex; flex-direction: column; align-items: center; gap: clamp(12px, 2.4vw, 20px); padding-top: 4px; }
+.flipcard { perspective: 900px; max-width: 100%; }
+.flipper { display: grid; transition: transform .8s cubic-bezier(.4,.1,.3,1); transform-style: preserve-3d; }
+.flipcard.flipped .flipper { transform: rotateY(180deg); }
+.flipper > * { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.wordrow { display: flex; align-items: center; gap: clamp(10px, 2vw, 18px); background: #fff; border-radius: 20px; padding: 6px 18px 6px 10px; box-shadow: 0 10px 18px -10px rgba(0,0,0,.7); max-width: 100%; }
+.cardback { transform: rotateY(180deg); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 18px -10px rgba(0,0,0,.7); border: 5px solid #f6c843; background: #c8642a; position: relative; }
+.cardback svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.flipcard.flipped .wordrow { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .flipper { transition: none; } }
+.pic { width: clamp(50px, 9vw, 78px); height: clamp(50px, 9vw, 78px); flex: none; }
+.pic svg { width: 100%; height: 100%; display: block; }
+.word { display: flex; }
+.lt { font-family: var(--letter); font-weight: 400; font-size: clamp(46px, 10vw, 88px); line-height: 1.2; color: var(--word-ink); background: none; border: 0; padding: 0 .015em; margin: 0; min-width: .32em; border-radius: 12px; cursor: pointer; }
+.lt:hover { background: #f1ecf9; }
+.lt.yes { background: var(--candy-2); animation: pop .45s ease-out; }
+.lt.miss { animation: shake .45s ease-in-out; color: #c0392b; }
+.lt.show { box-shadow: 0 0 0 4px var(--candy-2); animation: glow 1s ease-in-out 2; }
+.locked .lt { pointer-events: none; }
+
+.nothere-wrap { display: flex; justify-content: center; min-height: 0; }
+.nothere { display: flex; align-items: center; gap: 12px; font: inherit; font-size: clamp(22px, 5vw, 30px); font-weight: 700; color: #2a1404; background: var(--candy-2); border: 0; border-radius: 22px; padding: 10px 26px 10px 14px; cursor: pointer; box-shadow: 0 5px 0 #a37a12; animation: pop .4s ease-out; }
+.nothere svg { width: 46px; height: 46px; color: #2a1404; }
+.nothere.bad { animation: shake .45s ease-in-out; }
+.lt.found { background: var(--candy-2); cursor: default; }
+.lt.found:hover { background: var(--candy-2); }
+.done { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.done p { margin: 0; font-size: clamp(24px, 6vw, 34px); font-weight: 700; color: var(--candy-2); }
+.oopspic { position: fixed; z-index: 15; width: clamp(110px, 24vw, 150px); background: #fff; border: 5px solid #f3a6c0; border-radius: 20px; padding: 6px; box-shadow: 0 14px 28px -10px #000; text-align: center; pointer-events: none; animation: pop .35s ease-out; color: var(--word-ink); }
+.oopspic img { width: 100%; aspect-ratio: 1; object-fit: contain; display: block; }
+.oopspic.words { width: auto; min-width: 120px; padding: 8px 16px; }
+.oopspic.words span { font-size: 56px; }
+.oopsname { display: block; font-style: normal; font-family: var(--display); font-size: 20px; font-weight: 600; padding-bottom: 4px; }
+.oopspic span { display: block; font-family: var(--letter); font-size: 30px; line-height: 1; padding-bottom: 2px; }
+.candydrop { position: fixed; z-index: 5; width: 34px; height: 34px; pointer-events: none; }
+
+.panel { background: var(--night-2); border: 2px solid #6e4e34; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.panel h2 { margin: 0; font-size: 22px; font-weight: 600; color: var(--candy-2); }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.lab { font-size: 15px; color: var(--muted); width: 100%; }
+.chip { font: inherit; font-size: 16px; min-width: 44px; min-height: 40px; padding: 6px 12px; border-radius: 999px; border: 2px solid #5a4a7e; background: transparent; color: var(--ink); cursor: pointer; }
+.chip.letter { font-family: var(--letter); font-size: 20px; padding: 4px 0; }
+.chip[aria-pressed="true"] { background: var(--candy); border-color: var(--candy); color: #2a1404; font-weight: 600; }
+.btn { font: inherit; font-weight: 700; font-size: 20px; padding: 12px 26px; border-radius: 16px; border: 0; background: var(--candy); color: #2a1404; cursor: pointer; box-shadow: 0 5px 0 #a3530c; }
+.note { font-size: 14px; color: var(--muted); margin: 0; }
+
+@keyframes pop { 0% { transform: scale(.7) } 70% { transform: scale(1.12) } 100% { transform: scale(1) } }
+@keyframes shake { 0%,100% { transform: translateX(0) } 20% { transform: translateX(-7px) } 40% { transform: translateX(7px) } 60% { transform: translateX(-5px) } 80% { transform: translateX(5px) } }
+@keyframes glow { 0%,100% { background: transparent } 50% { background: #fde9a6 } }
+@media (prefers-reduced-motion: reduce) { .lt.yes, .lt.miss, .lt.show, .oopspic { animation: none; } }
+</style>
+
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header>
+    <h1>Fall Words</h1>
+    <div class="hbtns">
+      <div class="bucket" aria-label="Acorns collected"><svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 16q12-8 24 0v3H8z" fill="#7a4e25" stroke="#2a1a14" stroke-width="2.2"/><path d="M10 19h20q0 16-10 18-10-2-10-18z" fill="#c98a3d" stroke="#2a1a14" stroke-width="2.2"/><path d="M20 12q1-5 4-7" stroke="#2a1a14" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg><span id="score">0</span></div>
+      <button class="iconbtn" id="gear" aria-label="Settings" title="Settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+    </div>
+  </header>
+
+  <section class="panel" id="panel" hidden>
+    <h2>Settings</h2>
+    <div class="row"><span class="lab">Words on the screen</span>
+      <button class="chip" data-n="3">3</button><button class="chip" data-n="4">4</button><button class="chip" data-n="5">5</button>
+    </div>
+    <div class="row"><span class="lab">Letters to ask for (the game only asks for letters that are in the words)</span><div class="row" id="letters"></div></div>
+    <p class="note" id="panelNote"></p>
+    <div class="row"><button class="btn" id="play">Play</button></div>
+  </section>
+
+  <main id="stage">
+    <div class="adultbar"><p class="adult" id="adult"></p><button class="small" id="skip">Ask a different one</button><button class="small" id="newWords">New words</button></div>
+    <div class="nothere-wrap"><button class="nothere" id="notHere" hidden><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="28" cy="28" r="16" fill="none" stroke="currentColor" stroke-width="6"/><path d="M40 40l14 14" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><path d="M20 20l16 16M36 20L20 36" stroke="#e05a3a" stroke-width="5" stroke-linecap="round"/></svg>That's not here!</button></div>
+    <div class="board" id="board"></div>
+    <div class="done" id="done" hidden><p>You found every letter!</p><button class="btn" id="again">New words</button></div>
+  </main>
+</div>
+
+<script>
+const IMGS = null;   // public version: no Sunform pictures
+const NAMES = { a:"apple", b:"bat and ball", c:"cat", d:"dog", e:"echoing explorer", f:"funny fish", g:"goofy glasses", h:"highchair", i:"inchworm", j:"jumper", k:"kicker", l:"long legs", m:"mountain man", n:"newt", o:"octopus", p:"plumbing pipe", q:"queen", r:"railroad", s:"snake", t:"tall tower", u:"upside down umbrella", v:"v-neck vest", w:"wild wave", y:"yellow yarn", z:"zig zag" };
+const ALL = Object.keys(NAMES);
+const $ = id => document.getElementById(id);
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+                set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+let opts = Object.assign({ n: 4, letters: ALL.slice() }, store.get("fallWordsOpts", {}));
+opts.letters = opts.letters.filter(l => NAMES[l]);
+
+// Small fall pictures, drawn here so the game needs no other files.
+const K = "#2a1a14";
+const PICS = {
+  leaf: `<path d="M32 58V34" stroke="#7a4e25" stroke-width="3" stroke-linecap="round"/><path d="M32 6l6 12 10-4-2 12 10 2-10 8 4 8-12-2-6 8-6-8-12 2 4-8-10-8 10-2-2-12 10 4z" fill="#e2702a" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/><path d="M32 16v24M32 30l-9-6M32 30l9-6" stroke="#b0481a" stroke-width="2" fill="none"/>`,
+  acorn: `<path d="M14 24q18-14 36 0v5H14z" fill="#7a4e25" stroke="${K}" stroke-width="2.5"/><path d="M17 29h30q0 24-15 28-15-4-15-28z" fill="#c98a3d" stroke="${K}" stroke-width="2.5"/><path d="M32 16q2-8 7-10" stroke="${K}" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="25" cy="38" rx="3" ry="6" fill="#e7b26a"/>`,
+  apple: `<path d="M32 18c-8-6-22-2-22 14 0 14 10 26 22 22 12 4 22-8 22-22 0-16-14-20-22-14z" fill="#d8343a" stroke="${K}" stroke-width="2.5"/><path d="M32 18q0-8 4-12" stroke="#7a4e25" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M34 14q10-6 14 2-8 4-14-2z" fill="#4f8a2a" stroke="${K}" stroke-width="2"/><ellipse cx="22" cy="28" rx="3" ry="6" fill="#f08a8e"/>`,
+  pie: `<path d="M6 36h52l-6 14H12z" fill="#c98a3d" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/><path d="M6 36q26-22 52 0z" fill="#e2702a" stroke="${K}" stroke-width="2.5"/><path d="M14 31l8-6M26 28l8-6M38 27l8-4M20 33l8-5M34 33l8-5" stroke="#f3c98a" stroke-width="3" stroke-linecap="round"/>`,
+  corn: `<path d="M32 8q10 4 10 22t-10 24q-10-6-10-24t10-22z" fill="#f6c843" stroke="${K}" stroke-width="2.5"/><g fill="#e0a21f"><circle cx="28" cy="20" r="2"/><circle cx="36" cy="20" r="2"/><circle cx="28" cy="28" r="2"/><circle cx="36" cy="28" r="2"/><circle cx="28" cy="36" r="2"/><circle cx="36" cy="36" r="2"/><circle cx="32" cy="44" r="2"/></g><path d="M22 54q-10-14-4-30 6 16 14 30zM42 54q10-14 4-30-6 16-14 30z" fill="#6f9a3a" stroke="${K}" stroke-width="2.2" stroke-linejoin="round"/>`,
+  turkey: `<g stroke="${K}" stroke-width="2"><path d="M32 40L8 26a26 26 0 0 1 10-14z" fill="#d8343a"/><path d="M32 40L18 12a26 26 0 0 1 14-4z" fill="#f28a24"/><path d="M32 40V8a26 26 0 0 1 14 4z" fill="#f6c843"/><path d="M32 40l14-28a26 26 0 0 1 10 14z" fill="#e2702a"/></g><ellipse cx="32" cy="44" rx="13" ry="12" fill="#8a5a33" stroke="${K}" stroke-width="2.5"/><circle cx="32" cy="30" r="7" fill="#8a5a33" stroke="${K}" stroke-width="2.5"/><circle cx="30" cy="28" r="1.6" fill="${K}"/><circle cx="34" cy="28" r="1.6" fill="${K}"/><path d="M30 32l2 4 2-4z" fill="#f6c843"/><path d="M33 33q2 4 0 6" stroke="#d8343a" stroke-width="2.5" fill="none"/>`,
+  owl: `<path d="M16 22q0-12 16-12t16 12v20q0 16-16 16T16 42z" fill="#8a5a33" stroke="${K}" stroke-width="3"/><path d="M16 14l6 6M48 14l-6 6" stroke="${K}" stroke-width="3"/><circle cx="25" cy="27" r="7" fill="#fff" stroke="${K}" stroke-width="2"/><circle cx="39" cy="27" r="7" fill="#fff" stroke="${K}" stroke-width="2"/><circle cx="25" cy="27" r="3" fill="${K}"/><circle cx="39" cy="27" r="3" fill="${K}"/><path d="M29 35l3 5 3-5z" fill="#f28a24"/><path d="M22 46q10 6 20 0" fill="none" stroke="#c9a27a" stroke-width="2.5"/>`,
+  rake: `<path d="M46 6L24 40" stroke="#8a5a33" stroke-width="4.5" stroke-linecap="round"/><path d="M10 44l22-8 6 6-20 12z" fill="#9aa3ad" stroke="${K}" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 48l-4 10M17 51l-3 9M22 53l-1 8M27 51l1 8" stroke="#6b737c" stroke-width="2.5" stroke-linecap="round"/>`,
+  scarf: `<path d="M14 14q18 10 36 0v10q-18 10-36 0z" fill="#d8343a" stroke="${K}" stroke-width="2.5"/><path d="M36 22v32h10V20z" fill="#d8343a" stroke="${K}" stroke-width="2.5"/><path d="M36 32h10M36 42h10M22 18v10M30 20v10" stroke="#f6c843" stroke-width="3"/><path d="M37 54v6M41 54v6M45 54v6" stroke="${K}" stroke-width="2"/>`,
+  boot: `<path d="M18 8h18v30l14 6q6 3 6 10v4H18z" fill="#c0392b" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 58h38" stroke="${K}" stroke-width="4"/><path d="M18 14h18" stroke="#f6c843" stroke-width="4"/>`,
+  barn: `<path d="M8 28L32 10l24 18v28H8z" fill="#c0392b" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 28L32 10l24 18" fill="none" stroke="#fff" stroke-width="3"/><rect x="22" y="36" width="20" height="20" fill="#fff" stroke="${K}" stroke-width="2"/><path d="M22 36l20 20M42 36L22 56" stroke="#c0392b" stroke-width="2.5"/><rect x="28" y="20" width="8" height="8" fill="#fff" stroke="${K}" stroke-width="1.6"/>`,
+  hay: `<rect x="8" y="20" width="48" height="32" rx="5" fill="#e6c25a" stroke="${K}" stroke-width="2.5"/><path d="M8 28h48M8 44h48" stroke="#b48a26" stroke-width="2"/><path d="M14 22v28M50 22v28" stroke="#c0392b" stroke-width="3"/><path d="M20 20l-2-6M30 20l1-7M42 20l2-6" stroke="#b48a26" stroke-width="2" stroke-linecap="round"/>`,
+  pear: `<path d="M32 12c-6 0-8 8-8 14-6 4-10 10-10 18 0 8 8 14 18 14s18-6 18-14c0-8-4-14-10-18 0-6-2-14-8-14z" fill="#a8c94a" stroke="${K}" stroke-width="2.5"/><path d="M32 12q0-6 3-8" stroke="#7a4e25" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="24" cy="42" rx="3" ry="6" fill="#d4e58c"/>`,
+  mug: `<rect x="12" y="24" width="32" height="30" rx="5" fill="#2f6fb3" stroke="${K}" stroke-width="2.5"/><path d="M44 30q12 0 12 9t-12 9" fill="none" stroke="${K}" stroke-width="4"/><path d="M20 18q-3-6 0-10M28 18q-3-6 0-10M36 18q-3-6 0-10" stroke="#d8c4a8" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="22" cy="34" r="3" fill="#fff"/>`,
+  log: `<rect x="10" y="22" width="40" height="24" rx="4" fill="#8a5a33" stroke="${K}" stroke-width="2.5"/><ellipse cx="50" cy="34" rx="8" ry="12" fill="#e0b88a" stroke="${K}" stroke-width="2.5"/><ellipse cx="50" cy="34" rx="4" ry="6" fill="none" stroke="#a8784a" stroke-width="2"/><path d="M16 30h18M20 38h20" stroke="#6b4426" stroke-width="2"/>`,
+  nest: `<ellipse cx="32" cy="42" rx="24" ry="12" fill="#a8784a" stroke="${K}" stroke-width="2.5"/><ellipse cx="25" cy="34" rx="6" ry="7" fill="#8ec9e8" stroke="${K}" stroke-width="2"/><ellipse cx="38" cy="33" rx="6" ry="7" fill="#8ec9e8" stroke="${K}" stroke-width="2"/><path d="M10 40q22 8 44 0M12 46q20 6 40 0" stroke="#6b4426" stroke-width="2" fill="none"/>`,
+  jam: `<rect x="16" y="20" width="32" height="36" rx="6" fill="#8e2a5a" stroke="${K}" stroke-width="2.5"/><rect x="14" y="12" width="36" height="10" rx="3" fill="#e05a3a" stroke="${K}" stroke-width="2.2"/><rect x="21" y="30" width="22" height="14" rx="3" fill="#fff"/><circle cx="32" cy="37" r="4" fill="#d8343a"/>`,
+  quilt: `<rect x="8" y="12" width="48" height="40" rx="3" fill="#fff" stroke="${K}" stroke-width="2.5"/><g stroke="${K}" stroke-width="1.5"><rect x="8" y="12" width="16" height="13" fill="#e2702a"/><rect x="40" y="12" width="16" height="13" fill="#6b3fa0"/><rect x="24" y="25" width="16" height="14" fill="#f6c843"/><rect x="8" y="39" width="16" height="13" fill="#4f8a2a"/><rect x="40" y="39" width="16" height="13" fill="#2f6fb3"/></g><path d="M8 25h48M8 39h48M24 12v40M40 12v40" stroke="${K}" stroke-width="1.5" stroke-dasharray="3 2"/>`,
+  vest: `<path d="M18 8l8 6 6 16 6-16 8-6 8 10v38H34V30h-4v26H10V18z" fill="#4f8a2a" stroke="${K}" stroke-width="2.5" stroke-linejoin="round"/><circle cx="27" cy="38" r="1.8" fill="${K}"/><circle cx="27" cy="46" r="1.8" fill="${K}"/>`,
+  zip: `<path d="M14 8h36v48H14z" fill="#e2702a" stroke="${K}" stroke-width="2.5"/><path d="M32 8v48" stroke="#8a8f96" stroke-width="5" stroke-dasharray="2 2"/><rect x="28" y="22" width="8" height="10" rx="2" fill="#c5cad0" stroke="${K}" stroke-width="2"/><circle cx="32" cy="38" r="3" fill="none" stroke="${K}" stroke-width="2"/>`,
+  duck: `<ellipse cx="30" cy="42" rx="20" ry="12" fill="#f6c843" stroke="${K}" stroke-width="2.5"/><circle cx="44" cy="24" r="10" fill="#f6c843" stroke="${K}" stroke-width="2.5"/><path d="M53 24l9 2-9 4z" fill="#f28a24" stroke="${K}" stroke-width="2"/><circle cx="46" cy="21" r="2" fill="${K}"/><path d="M18 40q8 6 16 0" stroke="#e0a21f" stroke-width="2.5" fill="none"/>`,
+};
+const WORDS = Object.keys(PICS);
+// Card back: a warm fall pattern of leaves and acorns.
+const BACK = (() => {
+  let seed = 11; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const cols = ["#f6c843", "#e2702a", "#a8401e", "#f3a54a", "#7a4e25"];
+  let s = `<svg viewBox="0 0 300 100" preserveAspectRatio="xMidYMid slice"><rect width="300" height="100" fill="#c8642a"/>`;
+  for (let i = 0; i < 26; i++) {
+    const x = rnd() * 300, y = rnd() * 100, r = rnd() * 360, sc = .5 + rnd() * .5, c = cols[i % 5];
+    s += i % 4 === 3
+      ? `<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})"><path d="M-9 -4q9 -7 18 0v3h-18z" fill="#7a4e25"/><path d="M-7 -1h14q0 12-7 14-7-2-7-14z" fill="#e7b26a"/></g>`
+      : `<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})"><path d="M0 -14l4 8 7-3-1 8 7 1-7 6 3 5-8-1-5 6-5-6-8 1 3-5-7-6 7-1-1-8 7 3z" fill="${c}" opacity=".9"/><path d="M0 -8v18" stroke="#5a2c10" stroke-width="1.2" opacity=".5"/></g>`;
+  }
+  return s + `</svg>`;
+})();
+
+// ---------- stars ----------
+(function stars() {
+  const cv = $("stars"), g = cv.getContext("2d");
+  function draw() {
+    cv.width = innerWidth; cv.height = innerHeight; g.clearRect(0, 0, cv.width, cv.height);
+    let seed = 53; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const cols = ["rgba(226,112,42,.35)", "rgba(246,200,67,.3)", "rgba(192,57,43,.3)", "rgba(168,120,74,.35)"];
+    for (let i = 0; i < 26; i++) { const x = rnd()*cv.width, y = rnd()*cv.height, r = 6 + rnd()*8; g.save(); g.translate(x, y); g.rotate(rnd()*6.3); g.fillStyle = cols[i % 4]; g.beginPath(); g.ellipse(0, 0, r, r*.55, 0, 0, 7); g.fill(); g.restore(); }
+  }
+  draw(); addEventListener("resize", draw);
+})();
+
+// ---------- sound ----------
+let actx = null;
+function ac() { return actx = actx || new (window.AudioContext || window.webkitAudioContext)(); }
+function tone(freqs, dur = .1, type = "sine", vol = .12) {
+  try { const a = ac();
+    freqs.forEach((f, i) => { const o = a.createOscillator(), gn = a.createGain(); o.type = type; o.frequency.value = f; gn.gain.value = vol;
+      o.connect(gn); gn.connect(a.destination); const t = a.currentTime + i * dur; o.start(t); gn.gain.exponentialRampToValueAtTime(.001, t + dur * 1.6); o.stop(t + dur * 1.7); });
+  } catch (e) {}
+}
+function womp() {
+  try { const a = ac();
+    [[392, 349, 0, .3], [349, 311, .34, .3], [311, 233, .68, .7]].forEach(([f1, f2, at, len]) => {
+      const o = a.createOscillator(), gn = a.createGain(); o.type = "triangle";
+      const t = a.currentTime + at; o.frequency.setValueAtTime(f1, t); o.frequency.linearRampToValueAtTime(f2, t + len);
+      gn.gain.setValueAtTime(.0001, t); gn.gain.exponentialRampToValueAtTime(.15, t + .03); gn.gain.exponentialRampToValueAtTime(.001, t + len);
+      o.connect(gn); gn.connect(a.destination); o.start(t); o.stop(t + len + .05);
+    });
+  } catch (e) {}
+}
+
+// ---------- a q with a curled tail, like the Sunform q ----------
+// Measured from the page font so it sits on the same baseline and size as the other letters.
+let Q_SVG = null;
+function makeQ() {
+  try {
+    const c = document.createElement("canvas").getContext("2d");
+    c.font = '400 100px Lexend, "Century Gothic", sans-serif';
+    const mq = c.measureText("q"), ml = c.measureText("l"), mo = c.measureText("o");
+    const xh = mo.actualBoundingBoxAscent, desc = mq.actualBoundingBoxDescent;
+    const left = -mq.actualBoundingBoxLeft, right = mq.actualBoundingBoxRight;
+    const sw = ml.actualBoundingBoxLeft + ml.actualBoundingBoxRight;
+    if (!(xh > 0 && desc > 0 && sw > 0)) return;
+    const stemX = right - sw / 2, bowlL = left + sw / 2;
+    const cx = (bowlL + stemX) / 2, rx = (stemX - bowlL) / 2, ry = (xh - sw) / 2, cy = -xh / 2;
+    const bend = desc * .62, hook = desc * .5, bottom = desc - sw / 2;
+    const w = Math.max(mq.width, stemX + hook + sw), top = xh + sw, h = top + desc + sw / 2;
+    Q_SVG = `<svg viewBox="0 ${-top} ${w} ${h}" style="height:${h / 100}em;width:${w / 100}em;vertical-align:${-(desc + sw / 2) / 100}em;overflow:visible" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round">` +
+      `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>` +
+      `<path d="M${stemX} ${-xh + sw / 2} L${stemX} ${bend} Q${stemX} ${bottom} ${stemX + hook / 2} ${bottom} Q${stemX + hook} ${bottom} ${stemX + hook} ${bend + (bottom - bend) * .1}"/></svg>`;
+  } catch (e) { Q_SVG = null; }
+}
+function refreshQ() { makeQ(); if (Q_SVG) document.querySelectorAll('#board .lt[data-l="q"]').forEach(b => { b.innerHTML = Q_SVG; }); }
+if (document.fonts && document.fonts.load) document.fonts.load('400 100px "Lexend"').then(refreshQ, refreshQ); else refreshQ();
+makeQ();
+
+// ---------- game ----------
+let words = [], target = null, lastTarget = null, score = 0, busy = false, phase = "find", askedMissing = false;
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const LOOK = { a:"odgqce", b:"dpqh", c:"oea", d:"bqap", e:"coa", f:"tl", g:"qyap", h:"nkb", i:"jlt", j:"iyg", k:"h", l:"it", m:"nw", n:"uhmr", o:"cae", p:"qbdg", q:"pgdb", r:"n", s:"z", t:"fl", u:"nvy", v:"wyu", w:"mv", y:"vgj", z:"s" };
+function tiles() { return [...document.querySelectorAll("#board .lt")]; }
+function leftLetters() { return [...new Set(tiles().filter(b => !b.classList.contains("found")).map(b => b.dataset.l))].filter(l => NAMES[l]); }
+function onBoard() { return [...new Set(words.join("").split(""))]; }
+function newWords() {
+  // Pick words that together hold as many of the chosen letters as possible.
+  let best = null;
+  for (let t = 0; t < 60; t++) {
+    const ws = shuffle(WORDS).slice(0, opts.n);
+    const s = new Set(ws.join("").split("").filter(l => opts.letters.includes(l))).size;
+    if (!best || s > best.s) best = { ws, s };
+  }
+  words = best.ws; lastTarget = null; askedMissing = false;
+  $("done").hidden = true; $("board").hidden = false;
+  $("board").replaceChildren(...words.map(w => {
+    const card = document.createElement("div"); card.className = "flipcard";
+    const flip = document.createElement("div"); flip.className = "flipper";
+    const back = document.createElement("div"); back.className = "cardback"; back.setAttribute("aria-hidden", "true"); back.innerHTML = BACK;
+    const row = document.createElement("div"); row.className = "wordrow";
+    const pic = document.createElement("div"); pic.className = "pic"; pic.innerHTML = `<svg viewBox="0 0 64 64" aria-hidden="true">${PICS[w]}</svg>`;
+    const word = document.createElement("div"); word.className = "word";
+    for (const ch of w) { const b = document.createElement("button"); b.className = "lt"; if (ch === "q" && Q_SVG) b.innerHTML = Q_SVG; else b.textContent = ch; b.dataset.l = ch; b.setAttribute("aria-label", "letter " + ch); b.onclick = () => tap(b, ch); word.appendChild(b); }
+    row.append(pic, word); flip.append(row, back); card.appendChild(flip); return card;
+  }));
+  nextTarget();
+}
+function missingLetter(near) {
+  const here = onBoard();
+  const absent = ALL.filter(l => !here.includes(l));
+  const look = absent.filter(l => LOOK[near] && LOOK[near].includes(l));
+  const mine = absent.filter(l => opts.letters.includes(l));
+  const pool = look.length ? look : mine.length ? mine : absent;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+function nextTarget() {
+  busy = false; $("board").classList.remove("locked");
+  document.querySelectorAll(".lt.show").forEach(b => b.classList.remove("show"));
+  $("notHere").className = "nothere";
+  const left = leftLetters();
+  if (!left.length) { finishBoard(); return; }
+  if (left.length === 1 && !askedMissing) {
+    // Down to the last letter: first ask for one that is not on the board.
+    phase = "missing"; target = missingLetter(left[0]); lastTarget = target;
+    $("notHere").hidden = false;
+    $("adult").innerHTML = `Grown-up says: <b>"Find the ${NAMES[target]}."</b> (It's not here. Can they tell?)`;
+    return;
+  }
+  phase = "find"; $("notHere").hidden = true;
+  const mine = left.filter(l => opts.letters.includes(l)); const pool = mine.length ? mine : left;
+  const choices = pool.length > 1 ? pool.filter(l => l !== lastTarget) : pool;
+  target = choices[Math.floor(Math.random() * choices.length)]; lastTarget = target;
+  $("adult").innerHTML = `Grown-up says: <b>"Find the ${NAMES[target]}."</b>`;
+}
+function tap(btn, ch) {
+  if (busy || btn.classList.contains("found")) return;
+  if (phase === "find" && ch === target) {
+    busy = true; $("board").classList.add("locked");
+    btn.classList.add("found", "yes"); tone([523, 659, 784]); score++; dropCandy(btn);
+    // every letter in this word found: turn the card over
+    const card = btn.closest(".flipcard");
+    if ([...card.querySelectorAll(".lt")].every(b => b.classList.contains("found"))) setTimeout(() => { card.classList.add("flipped"); tone([392, 523, 659, 784], .08, "triangle", .08); }, 700);
+    $("adult").innerHTML = `Yes! That's the ${NAMES[target]}.`;
+    setTimeout(() => { btn.classList.remove("yes"); nextTarget(); }, 1400);
+  } else {
+    btn.classList.remove("miss"); void btn.offsetWidth; btn.classList.add("miss"); setTimeout(() => btn.classList.remove("miss"), 900);
+    womp(); showOops(btn, ch);
+    $("adult").innerHTML = `That's the ${NAMES[ch] || ch}. Grown-up says: <b>"Find the ${NAMES[target]}."</b>`;
+  }
+}
+$("notHere").onclick = () => {
+  if (busy) return;
+  if (phase === "missing") {
+    busy = true; askedMissing = true; $("board").classList.add("locked");
+    tone([523, 659, 784, 1046], .1); score++; dropCandy($("notHere"));
+    $("adult").innerHTML = `Good looking! There's no ${NAMES[target]} here.`;
+    setTimeout(nextTarget, 1700);
+  } else {
+    const b = $("notHere"); b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad"); womp();
+    tiles().filter(t => t.dataset.l === target && !t.classList.contains("found")).forEach(t => t.classList.add("show"));
+    $("adult").innerHTML = `It's here! Look again. Grown-up says: <b>"Find the ${NAMES[target]}."</b>`;
+  }
+};
+function finishBoard() {
+  $("notHere").hidden = true; target = null;
+  $("adult").innerHTML = "Every letter is found!";
+  tone([523, 659, 784, 1046, 1318], .12);
+  setTimeout(() => { $("done").hidden = false; }, 600);
+}
+$("again").onclick = newWords;
+function showOops(btn, ch) {
+  document.querySelectorAll(".oopspic").forEach(e => e.remove());
+  if (!NAMES[ch]) return;
+  const box = document.createElement("div"); box.className = "oopspic";
+  const s = document.createElement("span"); s.textContent = ch;
+  if (IMGS) { const im = new Image(); im.src = IMGS[ch].ill; im.alt = NAMES[ch]; box.append(im, s); }
+  else { const n = document.createElement("em"); n.className = "oopsname"; n.textContent = NAMES[ch]; box.classList.add("words"); box.append(s, n); }
+  document.body.appendChild(box);
+  const r = btn.getBoundingClientRect(), row = btn.closest(".wordrow").getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+  // Beside the word when there is room, so it doesn't cover other letters.
+  let left, top = row.top + row.height / 2 - h / 2;
+  if (row.right + 12 + w < innerWidth - 8) left = row.right + 12;
+  else if (row.left - 12 - w > 8) left = row.left - 12 - w;
+  else { left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8); top = r.bottom + 12; if (top + h > innerHeight - 8) top = r.top - h - 12; }
+  box.style.left = left + "px"; box.style.top = Math.max(8, top) + "px";
+  setTimeout(() => box.remove(), 2600);
+}
+const CANDIES = ["#f28a24", "#f6c843", "#c86bd8", "#7fd18b", "#ef5a6f"];
+function dropCandy(from) {
+  const r = from.getBoundingClientRect(), to = document.querySelector(".bucket").getBoundingClientRect();
+  const c = document.createElement("div"); c.className = "candydrop";
+  c.innerHTML = `<svg viewBox="0 0 40 40" width="34" height="34"><path d="M8 16q12-8 24 0v3H8z" fill="#7a4e25" stroke="#2a1a14" stroke-width="2.2"/><path d="M10 19h20q0 16-10 18-10-2-10-18z" fill="#c98a3d" stroke="#2a1a14" stroke-width="2.2"/></svg>`;
+  c.style.left = (r.left + r.width / 2 - 17) + "px"; c.style.top = (r.top + r.height / 3) + "px"; document.body.appendChild(c);
+  const anim = c.animate([{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${to.left - r.left - r.width / 2 + 17}px, ${to.top - r.top - r.height / 3}px) scale(.5)` }],
+    { duration: matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : 900, easing: "cubic-bezier(.5,-0.3,.6,1)" });
+  anim.onfinish = () => { c.remove(); $("score").textContent = score; };
+}
+$("skip").onclick = nextTarget;
+$("newWords").onclick = newWords;
+
+// ---------- settings ----------
+function syncPanel() {
+  document.querySelectorAll("[data-n]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.n === opts.n));
+  for (const b of $("letters").children) b.setAttribute("aria-pressed", opts.letters.includes(b.dataset.l));
+  $("panelNote").textContent = `${opts.letters.length} letters picked. The game picks words that have as many of these letters as it can. Found letters stay gold. When one letter is left, the game asks for a letter that isn't there, and kids tap \"That's not here!\" x is left out because it has no picture name.`;
+}
+$("letters").replaceChildren(...ALL.map(l => { const b = document.createElement("button"); b.className = "chip letter"; b.textContent = l; b.dataset.l = l;
+  b.onclick = () => { opts.letters = opts.letters.includes(l) ? opts.letters.filter(x => x !== l) : ALL.filter(x => x === l || opts.letters.includes(x)); syncPanel(); }; return b; }));
+document.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { opts.n = +b.dataset.n; syncPanel(); });
+function openPanel() { syncPanel(); $("panel").hidden = false; $("stage").hidden = true; }
+function play() { if (!opts.letters.length) opts.letters = ALL.slice(); store.set("fallWordsOpts", opts); $("panel").hidden = true; $("stage").hidden = false; newWords(); }
+$("gear").onclick = () => $("panel").hidden ? openPanel() : play();
+$("play").onclick = play;
+newWords();
+</script>
+
+</body></html>
