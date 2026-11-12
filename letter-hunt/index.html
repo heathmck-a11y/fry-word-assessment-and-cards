@@ -158,7 +158,7 @@ button:focus-visible { outline: 3px solid var(--candy-2); outline-offset: 3px; }
     </div>
     <div class="row"><span class="lab">Which words</span>
       <button class="chip" id="w-mine">Only words made of my letters</button>
-      <button class="chip" id="w-any">Any short words</button>
+      <button class="chip" id="w-any">Any short words (only my letters are called)</button>
     </div>
     <div class="row"><span class="lab">How often the letter is not there</span>
       <button class="chip" data-p="0">Never (the letter is always there)</button><button class="chip" data-p="0.2">Sometimes</button><button class="chip" data-p="0.35">Often</button>
@@ -302,14 +302,20 @@ function pickWords() {
   if (!usedMine) src = WORDS;
   // Choose words that share few letters, so more different letters are on the screen.
   let best = null;
-  for (let t = 0; t < 40; t++) {
+  for (let t = 0; t < 60; t++) {
     const ws = shuffle(src).slice(0, opts.nWords);
-    const score = new Set(ws.join("")).size;
+    const distinct = new Set(ws.join(""));
+    // Only the teacher's letters are ever called, so when other words are used, favor words that hold many of her letters.
+    const mine = [...distinct].filter(inSet).length;
+    const score = mine * 100 + distinct.size;
     if (!best || score > best.score) best = { ws, score };
   }
   return best.ws;
 }
-const remaining = () => [...document.querySelectorAll(".lt:not(.found)")];
+// Letters the teacher picked are the only ones called and the only ones that count toward finishing the board.
+// Other letters can still be on the screen when the game had to use other words; tapping one is just a miss.
+const inSet = (l) => opts.letters.includes(l);
+const remaining = () => [...document.querySelectorAll(".lt:not(.found)")].filter(b => inSet(b.dataset.l));
 const remainingLetters = () => [...new Set(remaining().map(b => b.dataset.l))];
 
 // Each turn: usually a letter that is still on the screen; sometimes one that isn't, picked from look-alikes when possible.
@@ -475,7 +481,7 @@ function newBoard() {
   const words = pickWords();
   const onBoard = [...new Set(words.join(""))];
   // Letters that can be called: my letters plus anything on the screen.
-  pool = [...new Set(opts.letters.concat(onBoard))].filter(l => NAMES[l]);
+  pool = opts.letters.filter(l => NAMES[l]);
   $("board").replaceChildren(...words.map(w => {
     const card = document.createElement("div"); card.className = "word";
     for (const ch of w) { const b = document.createElement("button"); b.className = "lt"; if (ch === "q" && Q_SVG) b.innerHTML = Q_SVG; else b.textContent = ch; b.dataset.l = ch; b.setAttribute("aria-label", "letter " + ch); b.onclick = () => tapLetter(b, ch); card.appendChild(b); }
@@ -520,7 +526,7 @@ function syncPanel() {
   for (const b of $("letters").children) b.setAttribute("aria-pressed", opts.letters.includes(b.dataset.l));
   const n = opts.letters.length, m = mineWords().length;
   let note = n < 5 ? "Pick at least 5 letters." : `${n} letters picked.`;
-  if (n >= 5 && opts.mine) note += m >= opts.nWords * 2 ? ` ${m} words can be made from only these letters.` : ` Only ${m} words can be made from only these letters, so the game will use any short words.`;
+  if (n >= 5 && opts.mine) note += m >= opts.nWords * 2 ? ` ${m} words can be made from only these letters.` : ` Only ${m} words can be made from only these letters, so the game will use other short words too. Only your letters will be called.`;
   $("panelNote").textContent = note;
   $("startBtn").disabled = n < 5;
 }
