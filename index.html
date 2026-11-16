@@ -218,6 +218,9 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
       <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
         <span class="legend">Practice cards</span>
         <span class="sub" id="cardsNote"></span>
+        <label class="sub" style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="bangOpt"> Add
+          <select id="bangN" aria-label="How many BANG! cards"><option>4</option><option>6</option><option>8</option></select>
+          BANG! cards and home rules, for a game at home</label>
       </div>
       <button class="btn primary" id="cardsBtn">Download cards (PDF)</button>
     </div>
@@ -528,6 +531,41 @@ async function wordImage(word) {
   g.fillText(word, W / 2, (H + a2 - d2) / 2);
   return c.toDataURL("image/jpeg", 0.85);
 }
+function bangImage() {
+  // A BANG! card the same size as a word card: starburst with a face, and the word BANG!
+  const W = 460, H = 160;
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  const cx = 78, cy = 80, n = 12;
+  const star = (r1, r2) => { g.beginPath(); for (let i = 0; i < n * 2; i++) { const a = Math.PI * i / n + 0.1, r = i % 2 ? r2 : r1; g.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a)); } g.closePath(); };
+  star(64, 42); g.fillStyle = "#f6b21b"; g.fill(); g.lineWidth = 5; g.strokeStyle = "#1d2b3a"; g.lineJoin = "round"; g.stroke();
+  star(40, 26); g.fillStyle = "#ef5b3c"; g.fill();
+  g.fillStyle = "#1d2b3a"; for (const dx of [-12, 12]) { g.beginPath(); g.ellipse(cx + dx, cy - 6, 4, 7, 0, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = "#f6a5b8"; for (const dx of [-21, 21]) { g.beginPath(); g.arc(cx + dx, cy + 4, 5, 0, Math.PI * 2); g.fill(); }
+  g.fillStyle = "#1d2b3a"; g.beginPath(); g.ellipse(cx, cy + 10, 5, 7, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = "#d94452"; g.font = 'bold 78px "Lexend", "Century Gothic", sans-serif'; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText("BANG!", 305, 84);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+function bangRulesPage(doc, nBang) {
+  doc.addPage();
+  doc.setTextColor(30); doc.setFontSize(18); doc.setFont(undefined, "bold"); doc.text("BANG! at home", 0.75, 1);
+  doc.setFontSize(11); doc.setFont(undefined, "normal");
+  const lines = [
+    `For 2 to 4 players. You need the word cards and the ${nBang} BANG! cards. About 10 minutes.`,
+    "",
+    "1.  Shuffle the BANG! cards in with the word cards. Put the pile face down.",
+    "2.  Take turns. Draw the top card and read the word out loud.",
+    "3.  Read it right? Keep the card.  Not sure? Someone says the word, you repeat it, and the card goes to the bottom of the pile.",
+    "4.  Draw a BANG! card? Put all your cards back in the pile and shuffle. The BANG! card goes back in too.",
+    "5.  Keep playing until the timer goes off, or until someone is holding 10 cards.",
+    "6.  The player with the most cards wins. Shuffle and play again!",
+    "",
+    "Tip: a grown-up or older sibling can play too. The goal is lots of quick, happy turns reading the words.",
+  ];
+  let y = 1.4;
+  for (const ln of lines) { const wrapped = doc.splitTextToSize(ln, 7); doc.text(wrapped, 0.75, y); y += 0.22 * wrapped.length + (ln ? 0.06 : 0.1); }
+}
 async function buildCardsPdf() {
   if (!window.jspdf || !window.jspdf.jsPDF) throw { code: "nolib" };
   try { await document.fonts.load('112px "Lexend"'); } catch (e) {}
@@ -535,16 +573,25 @@ async function buildCardsPdf() {
   const doc = new window.jspdf.jsPDF({ unit: "in", format: "letter", orientation: "portrait", compress: true });
   const CW = 2.5, CH = 1, COLS = 3, ROWS = 10, X0 = 0.5, Y0 = 0.5, PER = COLS * ROWS;
   const label = state.student.slice(0, 28);
-  for (let i = 0; i < missed.length; i++) {
+  const nBang = $("bangOpt").checked ? Number($("bangN").value) : 0;
+  const cards = missed.map(a => ({ kind: "word", a })).concat(Array.from({ length: nBang }, () => ({ kind: "bang" })));
+  const bangImg = nBang ? bangImage() : null;
+  for (let i = 0; i < cards.length; i++) {
     const k = i % PER;
     if (k === 0 && i > 0) doc.addPage();
     const col = k % COLS, row = Math.floor(k / COLS);
     const x = X0 + col * CW, y = Y0 + row * CH;
     doc.setDrawColor(170); doc.setLineWidth(0.01); doc.rect(x, y, CW, CH);
-    doc.addImage(await wordImage(missed[i].word), "JPEG", x + 0.1, y + 0.08, 2.3, 0.8);
-    doc.setFontSize(6); doc.setTextColor(150);
-    doc.text(`${label}  #${missed[i].n}`, x + 0.08, y + CH - 0.07);
+    if (cards[i].kind === "bang") {
+      doc.addImage(bangImg, "JPEG", x + 0.1, y + 0.08, 2.3, 0.8);
+      doc.setFontSize(6); doc.setTextColor(150); doc.text(`${label}  BANG!`, x + 0.08, y + CH - 0.07);
+    } else {
+      doc.addImage(await wordImage(cards[i].a.word), "JPEG", x + 0.1, y + 0.08, 2.3, 0.8);
+      doc.setFontSize(6); doc.setTextColor(150);
+      doc.text(`${label}  #${cards[i].a.n}`, x + 0.08, y + CH - 0.07);
+    }
   }
+  if (nBang) bangRulesPage(doc, nBang);
   return doc;
 }
 
