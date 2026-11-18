@@ -146,8 +146,11 @@ input[type=search] { font: inherit; padding: 10px 12px; border: 1.5px solid var(
 <body>
 <div class="wrap">
   <header>
-    <h1>High-Frequency Word Check</h1>
-    <p class="sub">First 300 high-frequency words (Kearns list) · saved on this device</p>
+    <div>
+      <h1>High-Frequency Word Check</h1>
+      <p class="sub">First 300 high-frequency words (Kearns list) · saved on this device</p>
+    </div>
+    <button class="btn ghost small" id="homeBtn" hidden>Home: students</button>
   </header>
 
   <div class="banner" id="backupBanner" hidden>
@@ -351,6 +354,7 @@ function esc(t) { const d = document.createElement("div"); d.textContent = t; re
 function show(id) {
   for (const s of ["setup", "test", "results"]) $(s).hidden = s !== id;
   $("savedPanel").hidden = $("backup").hidden = id === "test";
+  $("homeBtn").hidden = id === "setup";
   refreshBanners();
 }
 function saveDraft() { writeJSON(K_DRAFT, state); }
@@ -443,6 +447,11 @@ function showResults(note) {
 }
 $("redoBtn").onclick = () => showTest();
 $("nextBtn").onclick = () => { state = null; $("student").value = ""; checkDraft(); updateNameHint(); show("setup"); $("student").focus(); };
+// Home: back to the first screen (add or choose a student). A check in progress is kept, with a "Resume last check" button.
+$("homeBtn").onclick = () => {
+  if (state && !$("test").hidden) saveDraft();
+  state = null; $("student").value = ""; checkDraft(); updateNameHint(); show("setup"); window.scrollTo(0, 0); $("student").focus();
+};
 $("nextSetBtn").onclick = () => { const nx = nextSetAfter(state.range); if (nx) startCheck(state.student, nx.id); };
 
 function csvCell(v) { v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
