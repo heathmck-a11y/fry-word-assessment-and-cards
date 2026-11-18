@@ -117,6 +117,8 @@ input:focus-visible, button:focus-visible { outline: 3px solid var(--accent); ou
 .pill.on { background: var(--yes-soft); border-color: var(--yes); color: var(--ink); }
 .stu { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .stu b { overflow-wrap: anywhere; }
+.words { margin: 2px 0 4px; }
+.words summary { cursor: pointer; font-size: 14px; color: var(--ink); font-weight: 600; padding: 4px 0; }
 .saved-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .stu .saved-list li:last-child { border-bottom: none; }
 .saved-list > li.stu { display: flex; flex-direction: column; align-items: stretch; }
@@ -483,9 +485,47 @@ function renderSaved() {
     }
     const rows = document.createElement("ul"); rows.className = "saved-list";
     rows.append(...checks.map(checkRow));
-    wrap.append(head, prog, rows); return wrap;
+    wrap.append(head, prog, wordsOverview(name, checks), rows); return wrap;
   }));
   refreshBanners();
+}
+// Each word's latest result for a student, across all of their saved checks (a later check replaces an earlier one)
+function studentWords(checks) {
+  const sorted = checks.slice().sort((x, y) => (x.date + x.createdAt).localeCompare(y.date + y.createdAt));
+  const m = new Map();
+  for (const c of sorted) for (const a of c.answers) if (a.known !== null) m.set(a.n, { n: a.n, word: a.word, known: a.known, date: c.date });
+  return [...m.values()].sort((x, y) => x.n - y.n);
+}
+function wordListText(name, words) {
+  return `${name}: words not read yet (${words.length}, as of ${today()})\n` + words.map(w => w.word).join(", ") + "\n";
+}
+function wordsOverview(name, checks) {
+  const all = studentWords(checks);
+  const known = all.filter(w => w.known === true), notYet = all.filter(w => w.known === false);
+  const d = document.createElement("details"); d.className = "words";
+  const sm = document.createElement("summary");
+  sm.textContent = `Words: ${known.length} known, ${notYet.length} not yet`; d.appendChild(sm);
+  const sec = (label, list, cls) => {
+    const h = document.createElement("div"); h.className = "sub"; h.style.margin = "10px 0 4px"; h.textContent = `${label} (${list.length})`;
+    const g = document.createElement("div"); g.className = "wordgrid";
+    g.replaceChildren(...(list.length ? list.map(chip) : [Object.assign(document.createElement("span"), { className: "sub", textContent: "None yet." })]));
+    d.append(h, g);
+  };
+  sec("Not yet", notYet);
+  if (notYet.length) {
+    const row = document.createElement("div"); row.className = "acts"; row.style.margin = "8px 0 2px";
+    const cp = mk("Copy list of not-yet words", async () => {
+      try { await navigator.clipboard.writeText(wordListText(name, notYet)); cp.textContent = "Copied"; }
+      catch (e) { cp.textContent = "Copy didn't work"; }
+      setTimeout(() => cp.textContent = "Copy list of not-yet words", 1500);
+    });
+    const dl = mk("Download list (.txt)", () => saveBlob(new Blob([wordListText(name, notYet)], { type: "text/plain" }), `Not yet words - ${name} - ${today()}.txt`.replace(/[\\/:*?"<>|]/g, "")));
+    row.append(cp, dl); d.appendChild(row);
+  }
+  sec("Known", known);
+  const note = document.createElement("div"); note.className = "sub"; note.style.marginTop = "8px";
+  note.textContent = "Each word shows its most recent result, so a word missed once and read correctly on a later check counts as known."; d.appendChild(note);
+  return d;
 }
 function checkRow(c) {
     const li = document.createElement("li");
